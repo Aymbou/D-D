@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0d0a07">
+<title>Chroniques – Table de jeu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --night:#0d0a07; --ink:#2b1d12; --ink2:#5d4733; --ink3:#8a7257;
+  --gold:#d9b25f; --gold2:#f3dc95; --gold3:#a3782b; --line:rgba(217,178,95,.45);
+  --red:#8e2a22; --red2:#b23a2e; --green:#2f6b4f; --cream:#f6ecd3;
+  --parch:#ebdfc3; --parch2:#e2d2ae;
+  --display:'Cinzel','Trajan Pro',Georgia,serif;
+  --serif:'EB Garamond',Garamond,Georgia,serif;
+  --noise:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{background:#15100b var(--noise);background-size:144px;color:var(--cream);font-family:var(--serif);font-size:15px;line-height:1.45;min-height:100vh;padding-bottom:calc(20px + env(safe-area-inset-bottom))}
+button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
+input,textarea{font:inherit}
+.wrap{max-width:1100px;margin:0 auto}
+
+/* ---------- ciel ---------- */
+.sky{position:relative;overflow:hidden;padding:calc(13px + env(safe-area-inset-top)) 14.4px 18.7px;background:linear-gradient(180deg,#0a0c1c 0%,#16152c 45%,#29203a 78%,#1a130e 100%)}
+.stars{position:absolute;inset:0;pointer-events:none}
+.stars i{position:absolute;width:2px;height:2px;border-radius:50%;background:#fff;animation:tw 4s ease-in-out infinite}
+@keyframes tw{0%,100%{opacity:.25}50%{opacity:.9}}
+.moon{position:absolute;right:-33.1px;top:108px;width:86.4px;height:86.4px;border-radius:50%;background:radial-gradient(circle at 40% 40%,#fff6d8,#f2ddb0 60%,#d8bd86);box-shadow:0 0 43.2px 13px rgba(255,236,190,.25)}
+.landscape{position:absolute;left:0;right:0;bottom:0;width:100%;height:62%;pointer-events:none}
+.topbar{position:relative;display:flex;align-items:center;gap:7.2px;z-index:2}
+.pill{display:inline-flex;align-items:center;gap:7.2px;height:33.1px;padding:0 13px;border:1.5px solid var(--line);border-radius:719.3px;background:rgba(10,8,6,.55);font-family:var(--display);font-size:10.8px;letter-spacing:.08em;color:var(--cream)}
+.pill .dot{width:7.9px;height:7.9px;border-radius:50%;background:#7fc46a;box-shadow:0 0 5.8px #7fc46a}
+.pill.off .dot{background:#8a7d6b;box-shadow:none}
+.spacer{flex:1}
+.round{width:37.4px;height:33.1px;border-radius:719.3px;border:1.5px solid var(--line);background:rgba(10,8,6,.55);display:grid;place-items:center;color:var(--cream)}
+.round:disabled{opacity:.35}
+.round svg{width:15.8px;height:15.8px}
+.title{position:relative;z-index:2;margin:24.5px 0 4.3px;font-family:var(--display);font-weight:900;font-size:clamp(28.8px,9.4vw,49px);line-height:.98;letter-spacing:.01em;text-transform:uppercase;background:linear-gradient(180deg,#fbeec0 0%,#f0d283 38%,#c99a3e 70%,#a87a2a 100%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 2.2px 0 rgba(0,0,0,.65)) drop-shadow(0 5.8px 11.5px rgba(0,0,0,.5));max-width:88%;word-break:keep-all;hyphens:none}
+.subtitle{position:relative;z-index:2;font-style:italic;font-size:17.3px;color:#efe2c2;margin:0 0 14.4px;text-shadow:0 2px 4.3px #000}
+.chips{position:relative;z-index:2;display:flex;flex-wrap:wrap;gap:8.6px}
+.chip{display:flex;align-items:center;gap:8.6px;height:37.4px;padding:0 14.4px 0 3.6px;border-radius:719.3px;border:1.5px solid var(--line);background:rgba(14,10,7,.72);font-family:var(--display);font-weight:700;font-size:12.2px;letter-spacing:.03em}
+.chip small{font-weight:600;font-size:10.8px;opacity:.85;margin-left:2.9px}
+.chip.down{opacity:.55}
+.av{flex:none;display:grid;place-items:center;border-radius:50%;border:2.2px solid var(--gold);color:#fff3da;box-shadow:inset 0 0 0 2px rgba(0,0,0,.35),0 2px 4.3px rgba(0,0,0,.5)}
+.av svg{width:55%;height:55%}
+.chip .av{width:30.2px;height:30.2px;border-width:1.8px}
+
+/* ---------- parchemin ---------- */
+.parch{position:relative;margin:0 10.1px;padding:2.2px;border:1.5px solid var(--gold3);border-radius:10.1px;background:#1a120b}
+.parch>.in{position:relative;border-radius:7.2px;padding:21.6px 18.7px 21.6px;color:var(--ink);background:var(--noise),radial-gradient(ellipse at 30% 20%,#f4ead2 0%,var(--parch) 45%,var(--parch2) 100%);background-size:144px,100% 100%;box-shadow:inset 0 0 28.8px rgba(110,80,40,.35)}
+.corner{position:absolute;width:40.3px;height:40.3px;pointer-events:none;color:var(--gold3)}
+.corner.tl{left:7.2px;top:7.2px}.corner.tr{right:7.2px;top:7.2px;transform:scaleX(-1)}.corner.bl{left:7.2px;bottom:7.2px;transform:scaleY(-1)}.corner.br{right:7.2px;bottom:7.2px;transform:scale(-1)}
+.ribbon{display:inline-block;padding:6.5px 24.5px 6.5px 15.8px;background:var(--red);color:#f8eedb;font-family:var(--display);font-weight:700;font-size:10.8px;letter-spacing:.24em;text-transform:uppercase;clip-path:polygon(0 0,100% 0,calc(100% - 11.5px) 50%,100% 100%,0 100%)}
+.ribbon.combat{background:#7a1f18}.ribbon.explo{background:#2f5a46}.ribbon.repos{background:#3e3a78}.ribbon.pause{background:var(--red)}
+.cardtools{position:absolute;right:18.7px;top:17.3px;display:flex;gap:7.2px;z-index:2}
+.ring{width:38.9px;height:38.9px;border-radius:50%;border:1.5px solid var(--ink2);display:grid;place-items:center;color:var(--ink);background:rgba(255,250,235,.25)}
+.ring svg{width:15.8px;height:15.8px}
+.ring.on{background:var(--ink);color:var(--parch)}
+h2.scene{font-family:var(--display);font-weight:700;font-size:clamp(18.7px,5.2vw,24.5px);line-height:1.1;text-transform:uppercase;margin:13px 0 8.6px;color:#24170d}
+.scenetext{font-size:16px;line-height:1.55;margin:0;white-space:pre-line}
+[contenteditable=true]{outline:1.5px dashed var(--gold3);outline-offset:2.9px;border-radius:2.9px}
+.collapsed .scenetext,.collapsed .scene-body{display:none}
+.label{display:flex;align-items:center;gap:10.1px;margin:21.6px 0 11.5px;font-family:var(--display);font-weight:700;font-size:11.5px;letter-spacing:.24em;text-transform:uppercase;color:var(--ink2)}
+.label:after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--ink3),transparent)}
+.label em{font-family:var(--serif);font-style:italic;font-weight:400;letter-spacing:0;text-transform:none;font-size:13px}
+.dark .label{color:var(--gold)}
+.dark .label:after{background:linear-gradient(90deg,var(--gold3),transparent)}
+.sheet .label{color:var(--ink2)}
+.sheet .label:after{background:linear-gradient(90deg,var(--ink3),transparent)}
+
+/* ordre de bataille */
+.order{display:flex;align-items:flex-start;gap:2.9px;overflow-x:auto;padding:2.9px 2px 5.8px;scrollbar-width:none}
+.order::-webkit-scrollbar{display:none}
+.med{flex:none;width:69.1px;text-align:center}
+.med .av{width:57.6px;height:57.6px;margin:0 auto 5.8px;border-width:2.2px;border-color:#efe2c2;box-shadow:0 0 0 2px #3a2a1a,0 2.9px 7.2px rgba(0,0,0,.35)}
+.med.cur .av{border-color:var(--gold);box-shadow:0 0 0 2.2px #e3bf6a,0 0 14.4px 2.9px rgba(227,191,106,.6)}
+.med.dead .av{filter:grayscale(1);opacity:.5}
+.med b{display:block;font-family:var(--display);font-size:12.2px;color:#24170d;line-height:1.1;overflow-wrap:anywhere}
+.med span{display:block;font-family:var(--display);font-size:9.4px;letter-spacing:.14em;color:var(--ink3);text-transform:uppercase;margin-top:2.9px}
+.med.cur span{color:var(--red2);font-weight:700}
+.chev{flex:none;align-self:center;margin-top:-28.8px;color:var(--ink3);width:13px}
+.btn-gold{display:flex;align-items:center;justify-content:center;gap:10.1px;width:100%;height:46.1px;margin:11.5px 0 0;border-radius:4.3px;background:linear-gradient(180deg,#f2d78c,#d9b25f 55%,#b98b34);color:#2b1a08;font-family:var(--display);font-weight:700;font-size:15.1px;letter-spacing:.14em;text-transform:uppercase;box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 2.9px 0 #5b3f17,0 4.3px 8.6px rgba(0,0,0,.35)}
+.btn-gold:active{transform:translateY(2px);box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 2px 0 #5b3f17}
+.btn-gold svg{width:15.8px;height:15.8px}
+.btn-gold.small{display:inline-flex;width:auto;padding:0 21.6px;height:41.8px;font-size:13.7px}
+
+/* ennemis */
+.foe{position:relative;display:flex;align-items:center;gap:13px;margin:0 0 10.1px;padding:11.5px 36px 11.5px 15.8px;border:1.5px solid rgba(120,90,55,.35);border-left:5.8px solid var(--red);border-radius:4.3px;background:rgba(255,250,236,.45);width:100%;text-align:left;color:var(--ink)}
+.foe .ic{flex:none;width:46.1px;height:46.1px;border-radius:50%;display:grid;place-items:center;color:#f6ead0;background:var(--red)}
+.foe .ic svg{width:21.6px;height:21.6px}
+.foe h4{margin:0;font-family:var(--display);font-weight:700;font-size:14.4px;line-height:1.15;color:#24170d}
+.foe .st{font-family:var(--display);font-weight:700;font-size:10.1px;letter-spacing:.16em;text-transform:uppercase;color:var(--red2);margin:4.3px 0 2px}
+.foe p{margin:0;font-style:italic;font-size:13.7px;color:var(--ink2)}
+.foe .hp{font-size:10.8px;color:var(--ink2);font-style:normal}
+.foe .x{position:absolute;right:8.6px;top:8.6px;width:23px;height:23px;display:grid;place-items:center;color:var(--ink)}
+.foe .x svg{width:15.8px;height:15.8px}
+.foe.blesse{border-left-color:#b8631f}.foe.blesse .ic{background:#b8631f}.foe.blesse .st{color:#a5571a}
+.foe.cache{border-left-color:#9b7330}.foe.cache .ic{background:#9b7330}.foe.cache .st{color:#8b6526}
+.foe.detruit{border-left-color:#9a9186;opacity:.75}.foe.detruit .ic{background:#a59c90}.foe.detruit .st{color:#958a7c}.foe.detruit h4{text-decoration:line-through;color:#7d7266}
+.addfoe{padding:10.1px;border:1.5px dashed rgba(120,90,55,.45);border-radius:4.3px}
+.addfoe input,.field{width:100%;height:41.8px;padding:0 13px;border:1.5px solid rgba(120,90,55,.4);border-radius:4.3px;background:rgba(255,253,245,.7);color:var(--ink);font-size:15.1px}
+.hint{display:flex;gap:15.8px;align-items:center;margin-top:15.8px;padding:15.8px 14.4px 15.8px 18.7px;border:1.5px solid rgba(178,58,46,.35);border-left:5.8px solid var(--red);border-radius:4.3px;background:rgba(205,140,110,.25);font-size:16px;line-height:1.5}
+.hint svg{flex:none;width:47.5px;height:47.5px}
+
+/* compagnie */
+.section{padding:31.7px 14.4px 7.2px}
+.kicker{font-family:var(--display);font-size:12.2px;letter-spacing:.34em;color:var(--gold);text-transform:uppercase}
+.big{margin:2.9px 0 0;font-family:var(--display);font-weight:900;font-size:clamp(24.5px,7.5vw,36px);line-height:1.05;text-transform:uppercase;background:linear-gradient(180deg,#fbeec0,#e8c46f 50%,#b3852f);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 2.2px 0 rgba(0,0,0,.6))}
+.flourish{display:block;width:216px;max-width:80%;height:17.3px;margin:7.2px 0 13px;color:var(--gold)}
+.lead{font-size:15.8px;margin:0 0 15.8px;color:#efe2c2}
+.lead b{color:var(--gold2);font-weight:600}
+.herotabs{display:grid;grid-template-columns:repeat(auto-fill,minmax(108px,1fr));gap:7.2px;margin:20.2px 0 15.8px}
+.herotab{display:flex;align-items:center;gap:7.2px;height:43.2px;padding:0 7.2px 0 4.3px;border-radius:719.3px;border:1.5px solid var(--line);background:#16100b;text-align:left;color:var(--cream)}
+.herotab .av{width:34.6px;height:34.6px;border-width:1.8px}
+.herotab b{display:block;font-family:var(--display);font-size:12.2px;line-height:1.05}
+.herotab small{font-family:var(--display);font-size:10.1px;opacity:.8}
+.herotab.sel{background:linear-gradient(180deg,#f7ecd0,#e6d4ac);color:var(--ink);border-color:var(--gold)}
+.sheet{position:relative;margin:0 0 14.4px;border:1.5px solid var(--gold3);border-radius:10.1px;padding:2.2px;background:#1a120b}
+.sheet>.in{border-radius:7.2px;overflow:hidden;background:var(--noise),var(--parch);background-size:144px,auto;color:var(--ink)}
+.sheet .head{display:flex;align-items:center;gap:15.8px;padding:17.3px 15.8px;color:#fbf0d8;background:repeating-linear-gradient(135deg,rgba(255,255,255,.06) 0 10.1px,transparent 10.1px 20.2px),var(--hc,#8e2a22);border-bottom:2.2px solid #d58a6e}
+.sheet .head .av{width:74.9px;height:74.9px;border-width:3.6px;box-shadow:0 0 0 2.9px rgba(0,0,0,.25),0 5.8px 13px rgba(0,0,0,.4)}
+.sheet .head h3{margin:0;font-family:var(--display);font-weight:900;font-size:clamp(24.5px,6.8vw,33.1px);line-height:1;text-shadow:0 2.2px 0 rgba(0,0,0,.35)}
+.sheet .head p{margin:4.3px 0 0;font-style:italic;font-size:16.6px}
+.sheet .body{padding:17.3px 15.8px 18.7px}
+.hprow{display:flex;align-items:baseline;justify-content:space-between}
+.hprow .label{margin:0;flex:1}
+.hpnum{font-family:var(--display);font-weight:900;font-size:36px;color:var(--red2);line-height:1}
+.hpnum small{font-size:15.8px;color:var(--ink3);font-weight:600}
+.bar{height:18.7px;margin:7.2px 0 13px;padding:2.9px;border-radius:719.3px;background:#3b2a1b;box-shadow:inset 0 2px 2.9px rgba(0,0,0,.5)}
+.bar i{display:block;height:100%;border-radius:719.3px;background:linear-gradient(180deg,#f08a7e,#c23a2f 55%,#9a261d);box-shadow:inset 0 2px 0 rgba(255,255,255,.35);transition:width .4s}
+.bar i.mid{background:linear-gradient(180deg,#f3c27a,#d48a2c 55%,#a8641a)}
+.bar i.low{background:linear-gradient(180deg,#e06a5e,#8e1d16 60%,#5e100b)}
+.hpctl{display:flex;flex-wrap:wrap;align-items:center;gap:7.2px}
+.hpctl .ring{width:40.3px;height:40.3px}
+.hpctl .sep{width:1px;height:28.8px;background:var(--ink3);opacity:.5;margin:0 2.9px}
+.hpctl input{width:66.2px;height:40.3px;padding:0 8.6px;border:1.5px solid rgba(120,90,55,.4);border-radius:4.3px;background:rgba(255,253,245,.7);font-size:15.1px;color:var(--ink)}
+.act{height:40.3px;padding:0 14.4px;border-radius:2.9px;font-family:var(--display);font-weight:700;font-size:12.2px;letter-spacing:.12em;text-transform:uppercase;color:#f8ead0;box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 2.2px 0 rgba(0,0,0,.3)}
+.act.hurt{background:linear-gradient(180deg,#b23a2e,#8e2a22)}
+.act.heal{background:linear-gradient(180deg,#3f8a5f,#2f6b4f)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8.6px}
+.stat{position:relative;padding:8.6px 4.3px 13px;text-align:center;color:var(--ink);background:rgba(255,250,236,.55);border:1.5px solid rgba(120,90,55,.4);border-radius:5.8px 5.8px 40% 40%/5.8px 5.8px 26% 26%}
+.stat small{display:block;font-family:var(--display);font-size:9.4px;letter-spacing:.16em;color:var(--ink3)}
+.stat b{display:block;font-family:var(--display);font-size:21.6px;line-height:1.1}
+.stat span{font-size:11.5px;color:var(--ink2)}
+.kv{display:flex;gap:7.2px;flex-wrap:wrap;margin:0 0 2.9px}
+.kv div{flex:1;min-width:64.8px;padding:7.2px;text-align:center;border:1.5px solid rgba(120,90,55,.35);border-radius:5.8px;background:rgba(255,250,236,.4)}
+.kv small{display:block;font-family:var(--display);font-size:8.6px;letter-spacing:.14em;color:var(--ink3);text-transform:uppercase}
+.kv b{font-family:var(--display);font-size:17.3px}
+.list{display:flex;flex-direction:column;gap:7.2px}
+.rollrow{display:flex;align-items:center;gap:10.1px;width:100%;padding:8.6px 11.5px;border:1.5px solid rgba(120,90,55,.35);border-radius:5.8px;background:rgba(255,250,236,.45);text-align:left;color:var(--ink)}
+.rollrow b{font-family:var(--display);font-size:13px;flex:1}
+.rollrow span{font-size:12.2px;color:var(--ink2)}
+.rollrow svg{flex:none;width:21.6px;height:21.6px;color:var(--red)}
+.tags{display:flex;flex-wrap:wrap;gap:5.8px}
+.tag{padding:4.3px 10.1px;border-radius:719.3px;border:1.5px solid rgba(120,90,55,.4);background:rgba(255,250,236,.5);font-size:12.2px}
+.tag.bad{border-color:rgba(178,58,46,.5);color:var(--red)}
+ul.inv{margin:0;padding:0;list-style:none}
+ul.inv li{padding:7.2px 2.9px 7.2px 21.6px;border-bottom:1px solid rgba(120,90,55,.25);font-size:13.7px;position:relative}
+ul.inv li:before{content:"◆";position:absolute;left:4.3px;top:7.2px;color:var(--gold3);font-size:9.4px}
+.notes{font-style:italic;color:var(--ink2);font-size:13.7px;margin:0}
+
+/* autres onglets */
+.panel{margin:17.3px 10.1px 0}
+.empty{text-align:center;padding:7.2px 4.3px}
+.empty p{font-size:14.4px;margin:7.2px 0 13px}
+.path{position:relative;padding:4.3px 0 4.3px 0}
+.place{position:relative;display:flex;gap:13px;padding:0 0 18.7px}
+.place:before{content:"";position:absolute;left:22.3px;top:41.8px;bottom:0;border-left:2px dashed var(--ink3)}
+.place:last-child:before{display:none}
+.place .node{flex:none;width:46.1px;height:46.1px;border-radius:50%;display:grid;place-items:center;border:2px solid var(--ink2);background:rgba(255,250,236,.6);font-family:var(--display);font-weight:700;font-size:14.4px;color:var(--ink)}
+.place.cur .node{border:2.2px solid var(--gold);background:var(--red);color:#fbefd5;box-shadow:0 0 13px 2.9px rgba(227,191,106,.6)}
+.place h4{margin:4.3px 0 2px;font-family:var(--display);font-size:14.4px;color:#24170d}
+.place p{margin:0;font-size:13px;color:var(--ink2)}
+.here{display:inline-block;margin-top:2.9px;font-family:var(--display);font-size:9.4px;letter-spacing:.16em;color:var(--red2);font-weight:700;text-transform:uppercase}
+.quest{position:relative;margin:0 0 10.1px;padding:13px 14.4px 13px 46.1px;border:1.5px solid rgba(120,90,55,.35);border-radius:5.8px;background:rgba(255,250,236,.45)}
+.quest .box{position:absolute;left:14.4px;top:14.4px;width:20.2px;height:20.2px;border:2px solid var(--ink2);border-radius:2.9px;display:grid;place-items:center;color:var(--green)}
+.quest .box svg{width:15.8px;height:15.8px}
+.quest h4{margin:0;font-family:var(--display);font-size:14.4px;color:#24170d}
+.quest p{margin:2.9px 0 0;font-size:13px;color:var(--ink2)}
+.quest .st{display:inline-block;margin-top:5.8px;font-family:var(--display);font-size:8.6px;letter-spacing:.16em;text-transform:uppercase;padding:2.9px 7.2px;border-radius:719.3px;background:var(--red);color:#fbefd5}
+.quest.terminee{opacity:.7}.quest.terminee h4{text-decoration:line-through}.quest.terminee .st{background:var(--green)}
+.quest.echouee .st{background:#6b625a}
+.entry{padding:0 0 14.4px;margin:0 0 14.4px;border-bottom:1px solid rgba(120,90,55,.3)}
+.entry:last-child{border:none;margin:0}
+.entry h4{margin:0 0 4.3px;font-family:var(--display);font-size:14.4px;color:#24170d}
+.entry h4 small{font-family:var(--serif);font-style:italic;font-weight:400;font-size:11.5px;color:var(--ink3);margin-left:5.8px}
+.entry p{margin:0;font-size:14.4px;line-height:1.55}
+.entry:first-child p:first-letter{float:left;font-family:var(--display);font-weight:900;font-size:41.8px;line-height:.85;padding:4.3px 5.8px 0 0;color:var(--red)}
+.npc{display:flex;gap:11.5px;align-items:flex-start;padding:0 0 11.5px;margin:0 0 11.5px;border-bottom:1px solid rgba(120,90,55,.25)}
+.npc .av{width:37.4px;height:37.4px;border-width:1.8px}
+.npc h4{margin:2px 0 2px;font-family:var(--display);font-size:13.7px;color:#24170d}
+.npc p{margin:0;font-size:13px;color:var(--ink2)}
+.toggle{display:flex;align-items:center;justify-content:space-between;gap:11.5px;padding:10.1px 0;border-bottom:1px solid rgba(120,90,55,.25)}
+.toggle b{font-family:var(--display);font-size:13px}
+.toggle p{margin:2px 0 0;font-size:12.2px;color:var(--ink2)}
+.sw{flex:none;position:relative;width:46.1px;height:25.9px;border-radius:719.3px;background:#9b8d78;transition:.2s}
+.sw:after{content:"";position:absolute;left:2.9px;top:2.9px;width:20.2px;height:20.2px;border-radius:50%;background:#fff8e8;transition:.2s;box-shadow:0 2px 2.9px rgba(0,0,0,.3)}
+.sw.on{background:var(--green)}.sw.on:after{left:23px}
+textarea.field{height:86.4px;padding:8.6px 11.5px;font-size:11.5px;font-family:ui-monospace,Menlo,monospace}
+.btnrow{display:flex;flex-wrap:wrap;gap:7.2px;margin-top:8.6px}
+.btn{height:36px;padding:0 13px;border-radius:4.3px;border:1.5px solid var(--ink2);font-family:var(--display);font-weight:700;font-size:10.8px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink);background:rgba(255,250,236,.5)}
+.btn.danger{border-color:var(--red);color:var(--red)}
+.rules p,.rules li{font-size:13px}
+.rules code{font-size:10.1px;background:rgba(120,90,55,.15);padding:1px 3.6px;border-radius:2.9px;word-break:break-all}
+
+/* mise en page une seule page */
+.top2{display:grid;grid-template-columns:1fr;gap:0}
+.sheets{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:12px}
+.sheets .sheet{margin:0}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;margin:12px 10px 0}
+.grid2 .panel{margin:0}
+.panel h2.scene{font-size:19px;margin:12px 0 8px}
+.stats6{display:grid;grid-template-columns:repeat(6,1fr);gap:5px}
+.stats6 .stat{padding:6px 2px 9px}
+.stats6 .stat b{font-size:17px}
+.stats6 .stat span{font-size:12px}
+.stats6 .stat small{font-size:10px;letter-spacing:.08em}
+.sheet .body .label{margin:14px 0 8px}
+.chipsrow{display:flex;flex-wrap:wrap;gap:6px}
+.rollchip{display:inline-flex;align-items:center;gap:6px;padding:5px 10px 5px 6px;border-radius:999px;border:1.5px solid rgba(120,90,55,.4);background:rgba(255,250,236,.5);color:var(--ink);font-size:14px}
+.rollchip svg{width:18px;height:18px}
+.rollchip em{font-style:normal;color:var(--ink2);font-size:13px}
+.invline{font-size:14.5px;color:var(--ink);margin:0;line-height:1.6}
+.invline span:not(:last-child):after{content:" · ";color:var(--gold3)}
+/* barre du bas */
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;display:grid;grid-template-columns:repeat(6,1fr);padding:7.2px 2.9px calc(7.2px + env(safe-area-inset-bottom));background:linear-gradient(180deg,#1d1610,#110c08);border-top:1.5px solid rgba(217,178,95,.3)}
+nav.tabs button{display:flex;flex-direction:column;align-items:center;gap:4.3px;color:#9d8d76;font-family:var(--display);font-weight:700;font-size:9px;letter-spacing:.04em;text-transform:uppercase}
+nav.tabs svg{width:21.6px;height:21.6px}
+nav.tabs button.on{color:var(--gold);text-shadow:0 0 8.6px rgba(217,178,95,.5)}
+nav.tabs button.on svg{filter:drop-shadow(0 0 4.3px rgba(217,178,95,.6))}
+
+/* dé flottant + plateau */
+.fab{position:fixed;right:14px;bottom:calc(18px + env(safe-area-inset-bottom));z-index:25;width:60.5px;height:60.5px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 40% 35%,#c4473a,#8e2a22 70%);border:2.9px solid var(--gold);box-shadow:0 0 0 4.3px #120d09,0 7.2px 17.3px rgba(0,0,0,.6);color:#f6dcc9}
+.fab svg{width:33.1px;height:33.1px}
+.fab.hidden{display:none}
+.tray-bg{position:fixed;inset:0;z-index:40;background:rgba(5,3,2,.6);opacity:0;pointer-events:none;transition:.25s}
+.tray-bg.open{opacity:1;pointer-events:auto}
+.tray{position:fixed;left:0;right:0;bottom:0;z-index:41;max-width:518.4px;margin:0 auto;padding:13px 14.4px calc(17.3px + env(safe-area-inset-bottom));border-radius:13px 13px 0 0;border-top:2px solid var(--gold3);background:var(--noise),radial-gradient(ellipse at 50% 0%,#f4ead2,var(--parch) 60%,var(--parch2));background-size:144px,auto;color:var(--ink);transform:translateY(105%);transition:transform .3s cubic-bezier(.2,.8,.2,1);max-height:88vh;overflow-y:auto}
+.tray.open{transform:none}
+.grab{width:38.9px;height:3.6px;border-radius:6.5px;background:var(--ink3);margin:0 auto 8.6px;opacity:.6}
+.trayx{position:absolute;right:10.1px;top:8.6px;width:31.7px;height:31.7px;border-radius:50%;border:1.5px solid var(--ink2);display:grid;place-items:center;color:var(--ink)}
+.trayx svg{width:14.4px;height:14.4px}
+.tray h3{margin:0;text-align:center;font-family:var(--display);font-size:14.4px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink2)}
+.stage{height:136.8px;display:grid;place-items:center;perspective:504px}
+.die{position:relative;width:95px;height:95px;transform-style:preserve-3d}
+.die svg{position:absolute;inset:0;width:100%;height:100%;filter:drop-shadow(0 7.2px 8.6px rgba(60,20,10,.45))}
+.die .num{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--display);font-weight:900;font-size:28.8px;color:#fff3e0;text-shadow:0 2px 2.2px rgba(0,0,0,.6)}
+.die.roll{animation:tumble .95s cubic-bezier(.25,.7,.3,1)}
+@keyframes tumble{0%{transform:translateY(-43.2px) rotateX(0) rotateY(0) rotateZ(0) scale(.7)}35%{transform:translateY(7.2px) rotateX(400deg) rotateY(240deg) rotateZ(90deg) scale(1.05)}60%{transform:translateY(-10.1px) rotateX(620deg) rotateY(420deg) rotateZ(160deg)}80%{transform:translateY(2.9px) rotateX(700deg) rotateY(520deg) rotateZ(200deg)}100%{transform:translateY(0) rotateX(720deg) rotateY(540deg) rotateZ(180deg) scale(1)}}
+.die.crit svg{filter:drop-shadow(0 0 13px #f3c94e)}
+.die.fail svg{filter:grayscale(.6) drop-shadow(0 4.3px 5.8px rgba(0,0,0,.4))}
+.result{text-align:center;min-height:46.1px}
+.result b{display:block;font-family:var(--display);font-weight:900;font-size:28.8px;line-height:1.1;color:#24170d}
+.result span{font-size:13px;color:var(--ink2)}
+.result .dmg{margin-top:7.2px}
+.dice{display:grid;grid-template-columns:repeat(7,1fr);gap:4.3px;margin:10.1px 0}
+.dice button{height:37.4px;border-radius:5.8px;border:1.5px solid rgba(120,90,55,.45);font-family:var(--display);font-weight:700;font-size:11.5px;background:rgba(255,250,236,.5);color:var(--ink)}
+.dice button.sel{background:var(--red);color:#fbefd5;border-color:var(--red)}
+.steppers{display:flex;gap:10.1px;margin-bottom:8.6px}
+.step{flex:1;display:flex;align-items:center;justify-content:space-between;padding:4.3px;border:1.5px solid rgba(120,90,55,.4);border-radius:5.8px;background:rgba(255,250,236,.45)}
+.step small{font-family:var(--display);font-size:8.6px;letter-spacing:.14em;color:var(--ink3);text-transform:uppercase;display:block;text-align:center}
+.step b{font-family:var(--display);font-size:17.3px;display:block;text-align:center}
+.step button{width:31.7px;height:31.7px;border-radius:50%;border:1.5px solid var(--ink2);font-size:17.3px;color:var(--ink)}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);border:1.5px solid var(--ink2);border-radius:5.8px;overflow:hidden;margin-bottom:10.1px}
+.seg button{height:33.1px;font-family:var(--display);font-size:9.4px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink)}
+.seg button.sel{background:var(--ink);color:var(--parch)}
+.hist{margin:11.5px 0 0;padding:0;list-style:none}
+.hist li{display:flex;justify-content:space-between;gap:7.2px;padding:5.8px 2px;border-bottom:1px solid rgba(120,90,55,.25);font-size:12.2px}
+.hist li b{font-family:var(--display)}
+
+.toast{position:fixed;left:50%;top:calc(11.5px + env(safe-area-inset-top));z-index:60;transform:translate(-50%,-140%);max-width:67.5vw;padding:10.1px 15.8px;border-radius:8.6px;border:1.5px solid var(--gold);background:#1b140e;color:var(--cream);font-size:13px;box-shadow:0 7.2px 21.6px rgba(0,0,0,.6);transition:transform .3s}
+.toast.show{transform:translate(-50%,0)}
+@media (max-width:302.4px){body{font-size:12.2px}.parch>.in{padding:18.7px 13px}.cardtools{right:13px}.scenetext,.hint{font-size:16px}.hint svg{width:37.4px;height:37.4px}.med{width:60.5px}.med .av{width:50.4px;height:50.4px}nav.tabs button{font-size:7.6px}nav.tabs svg{width:19.4px;height:19.4px}}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<button class="fab" id="fab" aria-label="Lancer les dés"></button>
+<div class="tray-bg" id="trayBg"></div>
+<div class="tray" id="tray" role="dialog" aria-label="Lancer de dés"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* =========================================================
+   Chroniques – table de jeu D&D pilotée par le MJ (Claude)
+   L'état de la partie arrive par des liens :
+     #etat=<JSON>   remplace toute la partie
+     #maj=<JSON>    met à jour une partie de l'état
+   (JSON brut encodé pour URL, ou b64:<base64url>, ou z:<deflate-raw base64url>)
+   ========================================================= */
+const KEY = 'chroniques.etat.v1', KEY_OPT = 'chroniques.options.v1';
+const TABS = [['groupe','Groupe'],['carte','Carte'],['quetes','Quêtes'],['recit','Récit'],['monde','Monde'],['regles','Règles']];
+
+const I = {
+  hache:'<path d="M12 3v18" stroke-width="2.4"/><path d="M12 4.5c3.8 0 7 2.2 7.4 6.2-2.6-1.4-4.8-1.7-7.4-1.7z" fill="currentColor"/>',
+  dague:'<path d="M12 2.5l2 4V15h-4V6.5z" fill="currentColor"/><path d="M7.5 15.5h9M12 15.5v5"/><circle cx="12" cy="21" r="1.2" fill="currentColor"/>',
+  etoile:'<path d="M12 2.8l2.7 6 6.5.6-4.9 4.3 1.5 6.4L12 16.8 6.2 20.1l1.5-6.4L2.8 9.4l6.5-.6z" fill="currentColor" stroke="none"/>',
+  bouclier:'<path d="M12 3l7.5 3v5.5c0 4.8-3.2 8-7.5 9.8-4.3-1.8-7.5-5-7.5-9.8V6z" fill="currentColor" fill-opacity=".25"/>',
+  arc:'<path d="M7 3c7.5 4 7.5 14 0 18M7 3v18"/><path d="M4 12h15M16 9l3 3-3 3"/>',
+  croix:'<path d="M12 3v18M6.5 8.5h11" stroke-width="2.6"/>',
+  flamme:'<path d="M12 3c1 4.2 5.5 5.4 5.5 10.3A5.5 5.5 0 0 1 6.5 13.3c0-3 2-4.2 2.2-6.3 1 1 2 2.2 2 3.4 1.2-2.2 1.3-4.5 1.3-7.4z" fill="currentColor" fill-opacity=".3"/>',
+  note:'<path d="M9 18V5.5l10-2.2v12.8"/><circle cx="7" cy="18" r="2.2" fill="currentColor"/><circle cx="17" cy="16" r="2.2" fill="currentColor"/>',
+  feuille:'<path d="M5 19.5C5 10.5 11 5 19.5 5c0 8.3-5.4 14.5-14.5 14.5z" fill="currentColor" fill-opacity=".25"/><path d="M5 19.5l8.5-8.5"/>',
+  crane:'<path d="M12 3a7.2 7.2 0 0 0-7.2 7.2c0 2.6 1.2 4.2 3 5.3V19h8.4v-3.5c1.8-1.1 3-2.7 3-5.3A7.2 7.2 0 0 0 12 3z" fill="currentColor" fill-opacity=".2"/><circle cx="9.3" cy="10.8" r="1.8" fill="currentColor"/><circle cx="14.7" cy="10.8" r="1.8" fill="currentColor"/><path d="M10.5 19v-2M13.5 19v-2"/>',
+  oeil:'<path d="M2.5 12S6.3 6 12 6s9.5 6 9.5 6-3.8 6-9.5 6-9.5-6-9.5-6z"/><circle cx="12" cy="12" r="2.6"/><path d="M4 4l16 16"/>',
+  goutte:'<path d="M12 3.5c3 4.8 6 7.7 6 11a6 6 0 0 1-12 0c0-3.3 3-6.2 6-11z" fill="currentColor" fill-opacity=".25"/>',
+  x:'<path d="M6 6l12 12M18 6L6 18"/>',
+  chev:'<path d="M9 5l7 7-7 7"/>',
+  undo:'<path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/>',
+  share:'<circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="M8.3 10.8l7.4-4.3M8.3 13.2l7.4 4.3"/>',
+  plume:'<path d="M20 4C11 4 6 9.5 5 19c4-.5 7.5-2 10-5-2 0-3.5-.2-4.5-.8 3 0 5.5-1 7-3.5-1.5 0-2.8-.3-3.8-.8C17 7.6 19 6 20 4z"/><path d="M5 19l6-6"/>',
+  haut:'<path d="M6 15l6-6 6 6"/>',
+  bas:'<path d="M6 9l6 6 6-6"/>',
+  lune:'<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>',
+  check:'<path d="M5 12.5l4.5 4.5L19 7.5" stroke-width="2.6"/>',
+  // onglets
+  groupe:'<path d="M12 3l7.5 3v5.5c0 4.8-3.2 8-7.5 9.8-4.3-1.8-7.5-5-7.5-9.8V6z"/><path d="M9.3 9.5l5.4 5.4M14.7 9.5l-5.4 5.4"/>',
+  carte:'<path d="M3.5 6.5l5.5-2.5 6 2.5 5.5-2.5v13.5l-5.5 2.5-6-2.5-5.5 2.5z"/><path d="M9 4v13.5M15 6.5V20"/>',
+  quetes:'<path d="M6 4h11a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V4z"/><path d="M6 4a2 2 0 0 0-2 2v2h2M9.5 8.5h6M9.5 12h6M9.5 15.5h4"/>',
+  recit:'<path d="M3 5.5c3-1.2 6-1.2 9 .8 3-2 6-2 9-.8v13c-3-1.2-6-1.2-9 .8-3-2-6-2-9-.8z"/><path d="M12 6.3v13"/>',
+  monde:'<path d="M4 20V9h3V6h2v3h2V6h2v3h2V6h2v3h3v11z"/><path d="M10 20v-4a2 2 0 0 1 4 0v4M4 13h16"/>',
+  regles:'<path d="M12 4v16M7 20h10M5 7h14"/><path d="M5 7l-2.5 6a3 3 0 0 0 5 0zM19 7l-2.5 6a3 3 0 0 0 5 0z"/><circle cx="12" cy="4" r="1.2" fill="currentColor"/>'
+};
+const svg = (n, extra='') => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ${extra}>${I[n]||I.bouclier}</svg>`;
+const D20 = (fill='#9e2f25', stroke='#f3d79a') => `<svg viewBox="0 0 100 100"><polygon points="50,4 91,27 91,73 50,96 9,73 9,27" fill="${fill}" stroke="${stroke}" stroke-width="3" stroke-linejoin="round"/><polygon points="50,24 76,66 24,66" fill="rgba(255,255,255,.08)" stroke="${stroke}" stroke-width="2.4" stroke-linejoin="round"/><path d="M50,4 50,24 M91,27 76,66 M9,27 24,66 M50,96 24,66 M50,96 76,66 M9,73 24,66 M91,73 76,66 M9,27 50,24 M91,27 50,24" stroke="${stroke}" stroke-width="2" opacity=".75"/></svg>`;
+const DIE_SHAPES = {
+  4:'50,8 94,88 6,88', 6:'14,14 86,14 86,86 14,86', 8:'50,4 94,50 50,96 6,50',
+  10:'50,4 92,40 50,96 8,40', 12:'50,4 94,36 77,90 23,90 6,36', 20:null, 100:'50,4 92,40 50,96 8,40'
+};
+const COULEURS = {rouge:'#8e2a22',vert:'#2f5e4e',violet:'#5a3fa8',bleu:'#2c4f86',or:'#9a7428',gris:'#4d4640',brun:'#6b4426',noir:'#2a2420',rose:'#93405f',turquoise:'#22686c'};
+const EMBLEMES_CLASSE = {guerrier:'hache',barbare:'hache',paladin:'bouclier',roublard:'dague',voleur:'dague',magicien:'etoile',ensorceleur:'flamme',occultiste:'flamme',clerc:'croix',pretre:'croix',druide:'feuille',rodeur:'arc',barde:'note',moine:'bouclier'};
+const ETATS = ['debout','blesse','cache','detruit'];
+const ETAT_INFO = {debout:['Debout','crane'],blesse:['Blessé','goutte'],cache:['Caché','oeil'],detruit:['Détruit','x']};
+
+const h = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const norm = s => String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+const mod = v => Math.floor((Number(v)-10)/2);
+const sgn = n => (n>=0?'+':'−')+Math.abs(n);
+const clone = o => JSON.parse(JSON.stringify(o));
+
+/* ---------- état ---------- */
+const VIDE = () => ({titre:'Chroniques',sousTitre:'',statut:'',scene:{titre:'',texte:''},combat:{actif:false,round:1,tour:0,ordre:[]},ennemis:[],consigne:'',or:0,heros:[],lieux:[],lieuActuel:'',quetes:[],journal:[],monde:{pnj:[],notes:''}});
+let S = VIDE(), undoStack = [], tab = 'groupe', heroSel = 0, editScene = false, sceneCollapsed = false, saved = true;
+let OPT = {desVirtuels:true};
+
+function load(){
+  try{ const o = JSON.parse(localStorage.getItem(KEY_OPT)); if(o) OPT = Object.assign(OPT,o); }catch(e){}
+  try{ const s = JSON.parse(localStorage.getItem(KEY)); if(s) S = fix(s); }catch(e){}
+}
+function save(){
+  try{ localStorage.setItem(KEY, JSON.stringify(S)); saved = true; }catch(e){ saved = false; }
+}
+function saveOpt(){ try{ localStorage.setItem(KEY_OPT, JSON.stringify(OPT)); }catch(e){} }
+function fix(s){
+  const d = VIDE(); const o = Object.assign(d, s||{});
+  o.scene = Object.assign({titre:'',texte:''}, o.scene||{});
+  o.combat = Object.assign({actif:false,round:1,tour:0,ordre:[]}, o.combat||{});
+  o.monde = Object.assign({pnj:[],notes:''}, o.monde||{});
+  ['ennemis','heros','lieux','quetes','journal'].forEach(k => { if(!Array.isArray(o[k])) o[k] = []; });
+  if(!Array.isArray(o.combat.ordre)) o.combat.ordre = [];
+  if(!Array.isArray(o.monde.pnj)) o.monde.pnj = [];
+  o.lieux = o.lieux.map(l => typeof l === 'string' ? {nom:l} : l);
+  o.quetes = o.quetes.map(q => typeof q === 'string' ? {titre:q} : q);
+  o.journal = o.journal.map(j => typeof j === 'string' ? {texte:j} : j);
+  return o;
+}
+function change(fn, msg){
+  undoStack.push(JSON.stringify(S)); if(undoStack.length > 40) undoStack.shift();
+  fn(); save(); render(); if(msg) toast(msg);
+}
+function undo(){
+  if(!undoStack.length) return;
+  S = fix(JSON.parse(undoStack.pop())); save(); render(); toast('Action annulée');
+}
+
+/* ---------- fusion des mises à jour du MJ ---------- */
+const KEYED = {heros:'nom', ennemis:'nom', quetes:'titre', lieux:'nom', pnj:'nom'};
+const isObj = v => v && typeof v === 'object' && !Array.isArray(v);
+function merge(t, p){
+  for(const [k0, v] of Object.entries(p||{})){
+    if(k0.endsWith('+')){ const k = k0.slice(0,-1); t[k] = (Array.isArray(t[k]) ? t[k] : []).concat(v); continue; }
+    if(k0.endsWith('!')){ t[k0.slice(0,-1)] = v; continue; }
+    const k = k0;
+    if(KEYED[k] && Array.isArray(v) && Array.isArray(t[k])) mergeKeyed(t[k], v, KEYED[k]);
+    else if(isObj(v) && isObj(t[k])) merge(t[k], v);
+    else t[k] = v;
+  }
+  return t;
+}
+function mergeKeyed(arr, items, key){
+  for(const it of items){
+    if(!isObj(it)) continue;
+    const i = arr.findIndex(x => norm(x[key]) === norm(it[key]));
+    if(it.supprimer){ if(i >= 0) arr.splice(i,1); continue; }
+    if(i >= 0) merge(arr[i], it); else arr.push(it);
+  }
+}
+
+/* ---------- décodage des liens ---------- */
+function b64ToBytes(s){ s = s.replace(/-/g,'+').replace(/_/g,'/'); while(s.length % 4) s += '='; const b = atob(s); return Uint8Array.from(b, c => c.charCodeAt(0)); }
+function bytesToB64(u){ let s = ''; u.forEach(c => s += String.fromCharCode(c)); return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); }
+async function decodePayload(p){
+  if(p.startsWith('z:')){
+    const st = new Blob([b64ToBytes(p.slice(2))]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+    return JSON.parse(await new Response(st).text());
+  }
+  if(p.startsWith('b64:')) return JSON.parse(new TextDecoder().decode(b64ToBytes(p.slice(4))));
+  let t = p; try{ t = decodeURIComponent(p); }catch(e){}
+  return JSON.parse(t);
+}
+async function encodeState(){
+  const json = JSON.stringify(S);
+  try{
+    if(typeof CompressionStream === 'undefined') throw 0;
+    const st = new Blob([json]).stream().pipeThrough(new CompressionStream('deflate-raw'));
+    return 'z:' + bytesToB64(new Uint8Array(await new Response(st).arrayBuffer()));
+  }catch(e){ return encodeURIComponent(json); }
+}
+async function importFrom(text){
+  let raw = String(text||'').trim(); if(!raw) return false;
+  let kind = 'etat', payload = raw;
+  const m = raw.match(/#(etat|maj)=(.*)$/s);
+  if(m){ kind = m[1]; payload = m[2]; }
+  else if(/^(etat|maj)=/.test(raw)){ kind = raw.startsWith('maj') ? 'maj' : 'etat'; payload = raw.slice(raw.indexOf('=')+1); }
+  try{
+    const data = await decodePayload(payload.trim());
+    if(kind === 'maj' || data.maj){
+      change(() => { const p = data.maj || data; merge(S, p); S = fix(S); if(S.combat.tour >= S.combat.ordre.length) S.combat.tour = 0; }, '📜 Le MJ a mis à jour la partie');
+    }else{
+      change(() => { S = fix(data); heroSel = 0; }, '📜 Nouvelle partie chargée');
+    }
+    return true;
+  }catch(e){ console.warn(e); toast('⚠️ Lien du MJ illisible'); return false; }
+}
+async function readHash(){
+  const hs = location.hash;
+  if(/^#(etat|maj)=/.test(hs)){
+    await importFrom(hs);
+    try{ history.replaceState(null, '', location.pathname + location.search); }catch(e){}
+  }
+}
+
+/* ---------- dés ---------- */
+function parseDice(str){
+  const des = []; let m = 0;
+  String(str||'').replace(/\s/g,'').toLowerCase().replace(/([+-]?)(\d*)d(\d+)|([+-]?\d+)/g, (all, s, n, f, k) => {
+    if(f) des.push({n:(parseInt(n)||1)*(s==='-'?-1:1), f:parseInt(f)}); else if(k) m += parseInt(k); return '';
+  });
+  return {des, mod:m};
+}
+const rnd = f => 1 + Math.floor(Math.random()*f);
+let tray = {f:20, n:1, mod:0, adv:'normal', last:null, hist:[], pending:null, label:''};
+function rollSpec(spec){
+  // spec: {label, des:[{n,f}], mod, adv, suite:{label, formule}}
+  if(!OPT.desVirtuels){
+    const f = spec.des.map(d => `${Math.abs(d.n)>1?Math.abs(d.n):''}d${d.f}`).join(' + ') + (spec.mod ? ' ' + sgn(spec.mod) : '');
+    toast(`🎲 Lancez vos dés : ${f}${spec.label ? ' — ' + spec.label : ''}`); return;
+  }
+  const rolls = []; let total = spec.mod||0, kept = null, other = null;
+  if(spec.adv && spec.adv !== 'normal' && spec.des.length === 1 && spec.des[0].f === 20 && Math.abs(spec.des[0].n) === 1){
+    const a = rnd(20), b = rnd(20); kept = spec.adv === 'avantage' ? Math.max(a,b) : Math.min(a,b); other = kept === a ? b : a;
+    rolls.push(kept); total += kept;
+  }else{
+    spec.des.forEach(d => { for(let i=0;i<Math.abs(d.n);i++){ const r = rnd(d.f); rolls.push(r); total += d.n<0 ? -r : r; } });
+  }
+  const mainF = spec.des[0] ? spec.des[0].f : 20;
+  const nat = (mainF === 20 && rolls.length === 1) ? rolls[0] : null;
+  tray.last = {label:spec.label||'', total, rolls, other, mod:spec.mod||0, f:mainF, nat, suite:spec.suite||null};
+  tray.hist.unshift({label:spec.label || describe(spec), total}); tray.hist = tray.hist.slice(0,8);
+  openTray(true);
+}
+function describe(spec){ return spec.des.map(d => `${Math.abs(d.n)}d${d.f}`).join('+') + (spec.mod ? sgn(spec.mod) : ''); }
+function dieSVG(f){
+  if(f === 20 || !DIE_SHAPES[f]) return D20();
+  return `<svg viewBox="0 0 100 100"><polygon points="${DIE_SHAPES[f]}" fill="#9e2f25" stroke="#f3d79a" stroke-width="3" stroke-linejoin="round"/><polygon points="${DIE_SHAPES[f]}" fill="none" stroke="#f3d79a" stroke-width="1.5" opacity=".45" transform="translate(50 50) scale(.62) translate(-50 -50)"/></svg>`;
+}
+function openTray(animate){
+  const t = tray, L = t.last;
+  const el = document.getElementById('tray');
+  el.innerHTML = `<div class="grab"></div><button class="trayx" id="trayX" aria-label="Fermer">${svg('x')}</button><h3>Lancer de dés</h3>
+    <div class="stage"><div class="die ${L && L.nat===20?'crit':''} ${L && L.nat===1?'fail':''}" id="die">${dieSVG(L?L.f:t.f)}<div class="num" id="dieNum">${L?L.rolls[0]:'?'}</div></div></div>
+    <div class="result" id="res">${L ? resultHTML(L) : '<span>Choisissez un dé et lancez.</span>'}</div>
+    <div class="dice">${[4,6,8,10,12,20,100].map(f => `<button class="${t.f===f?'sel':''}" data-f="${f}">d${f}</button>`).join('')}</div>
+    <div class="steppers">
+      <div class="step"><button data-st="n-">−</button><div><small>Nombre</small><b>${t.n}</b></div><button data-st="n+">+</button></div>
+      <div class="step"><button data-st="m-">−</button><div><small>Bonus</small><b>${sgn(t.mod)}</b></div><button data-st="m+">+</button></div>
+    </div>
+    <div class="seg">${[['desavantage','Désavantage'],['normal','Normal'],['avantage','Avantage']].map(([k,l]) => `<button class="${t.adv===k?'sel':''}" data-adv="${k}">${l}</button>`).join('')}</div>
+    <button class="btn-gold" id="doRoll">${svg('chev')} Lancer ${t.n}d${t.f}${t.mod?sgn(t.mod):''}</button>
+    ${t.hist.length ? `<ul class="hist">${t.hist.map(x => `<li><span>${h(x.label)}</span><b>${x.total}</b></li>`).join('')}</ul>` : ''}`;
+  document.getElementById('trayBg').classList.add('open'); el.classList.add('open');
+  el.querySelectorAll('[data-f]').forEach(b => b.onclick = () => { t.f = +b.dataset.f; if(t.f!==20) t.adv='normal'; t.last=null; openTray(); });
+  el.querySelectorAll('[data-st]').forEach(b => b.onclick = () => { const s = b.dataset.st; if(s==='n+') t.n=Math.min(20,t.n+1); if(s==='n-') t.n=Math.max(1,t.n-1); if(s==='m+') t.mod++; if(s==='m-') t.mod--; openTray(); });
+  el.querySelectorAll('[data-adv]').forEach(b => b.onclick = () => { t.adv = b.dataset.adv; if(t.adv!=='normal'){ t.f=20; t.n=1; } openTray(); });
+  el.querySelector('#trayX').onclick = closeTray;
+  el.querySelector('#doRoll').onclick = () => rollSpec({label:'', des:[{n:t.n,f:t.f}], mod:t.mod, adv:t.adv});
+  const sb = el.querySelector('[data-suite]'); if(sb) sb.onclick = () => { const p = parseDice(L.suite.formule); rollSpec({label:L.suite.label, des:p.des.length?p.des:[{n:1,f:6}], mod:p.mod}); };
+  if(animate && L) animateDie(L);
+}
+function resultHTML(L){
+  const detail = L.rolls.length > 1 ? `Dés : ${L.rolls.join(' + ')}${L.mod?` ${sgn(L.mod)}`:''}` : (L.other!=null ? `Gardé ${L.rolls[0]} (l'autre : ${L.other})${L.mod?` ${sgn(L.mod)}`:''}` : (L.mod ? `${L.rolls[0]} ${sgn(L.mod)}` : ''));
+  const crit = L.nat===20 ? ' · Réussite critique !' : L.nat===1 ? ' · Échec critique…' : '';
+  return `<b>${L.total}</b><span>${h(L.label)}${L.label&&detail?' — ':''}${detail}${crit}</span>${L.suite?`<div class="dmg"><button class="btn" data-suite="1">Lancer les dégâts (${h(L.suite.formule)})</button></div>`:''}`;
+}
+function animateDie(L){
+  const die = document.getElementById('die'), num = document.getElementById('dieNum'), res = document.getElementById('res');
+  res.style.visibility = 'hidden'; die.classList.remove('roll'); void die.offsetWidth; die.classList.add('roll');
+  let k = 0; const iv = setInterval(() => { num.textContent = rnd(L.f); if(++k > 16){ clearInterval(iv); num.textContent = L.rolls[0]; res.style.visibility = 'visible'; } }, 55);
+}
+function closeTray(){ document.getElementById('trayBg').classList.remove('open'); document.getElementById('tray').classList.remove('open'); }
+
+/* ---------- rendu ---------- */
+const corners = () => ['tl','tr','bl','br'].map(c => `<svg class="corner ${c}" viewBox="0 0 56 56" fill="none"><path d="M3 40V10a7 7 0 0 1 7-7h30" stroke="currentColor" stroke-width="2.2"/><path d="M9 32V14a5 5 0 0 1 5-5h18" stroke="currentColor" stroke-width="1.2" opacity=".7"/><rect x="11" y="11" width="9" height="9" transform="rotate(45 15.5 15.5)" fill="#a8302a"/></svg>`).join('');
+const flourish = `<svg class="flourish" viewBox="0 0 300 24" fill="currentColor"><rect x="0" y="11" width="122" height="2"/><rect x="178" y="11" width="122" height="2"/><path d="M128 12l6-6 6 6-6 6z"/><path d="M150 3l13 9-13 9-13-9z"/><path d="M160 12l6-6 6 6-6 6z"/></svg>`;
+function heroColor(x){ return COULEURS[norm(x && x.couleur)] || (x && /^#/.test(x.couleur||'') ? x.couleur : null); }
+function heroEmblem(x){
+  if(x && I[norm(x.embleme)]) return norm(x.embleme);
+  const c = norm(x && x.classe); for(const k in EMBLEMES_CLASSE) if(c.includes(k)) return EMBLEMES_CLASSE[k];
+  return 'bouclier';
+}
+const PALETTE = ['#8e2a22','#2f5e4e','#5a3fa8','#2c4f86','#9a7428','#93405f','#22686c','#6b4426'];
+function avatar(x, i, cls=''){
+  const col = heroColor(x) || PALETTE[(i||0) % PALETTE.length];
+  return `<div class="av ${cls}" style="background:radial-gradient(circle at 40% 35%,${col}dd,${col} 70%)">${svg(heroEmblem(x))}</div>`;
+}
+function findHero(nom){ const i = S.heros.findIndex(x => norm(x.nom) === norm(nom)); return i >= 0 ? [S.heros[i], i] : [null,-1]; }
+
+function titleSize(t){ const L = Math.max(4, ...String(t).split(/\s+/).map(w => w.length)); const W = Math.min(720, window.innerWidth) * .86 - 20; return Math.round(Math.max(24, Math.min(46, W / (L * .78)))); }
+function renderSky(){
+  const words = String(S.titre||'Chroniques').trim();
+  return `<header class="sky">
+    <div class="stars" id="stars"></div><div class="moon"></div>
+    <svg class="landscape" viewBox="0 0 400 260" preserveAspectRatio="xMidYMax slice">
+      <defs><radialGradient id="glow"><stop offset="0" stop-color="#ff9a4a" stop-opacity=".9"/><stop offset="1" stop-color="#ff9a4a" stop-opacity="0"/></radialGradient></defs>
+      <path d="M0 150 L60 110 L110 140 L170 95 L230 135 L290 105 L350 130 L400 115 V260 H0z" fill="#2c2340" opacity=".9"/>
+      <path d="M0 190 Q90 165 180 182 T400 170 V260 H0z" fill="#1d1622"/>
+      <g fill="#120d10">
+        <path d="M318 74 h46 v130 h-46z"/><path d="M312 74 l10 -18 l8 12 l10 -30 l10 28 l8 -10 l12 18z"/>
+        <path d="M296 180 h30 v24 h-30z"/><path d="M364 176 h36 v28 h-36z"/>
+        ${Array.from({length:18},(_,i)=>{const x=i*24-6,hh=34+((i*37)%22);return `<path d="M${x} 230 l12 -${hh} l12 ${hh}z"/>`}).join('')}
+        <rect x="0" y="225" width="400" height="40"/>
+      </g>
+      <circle cx="342" cy="112" r="22" fill="url(#glow)"/><rect x="338" y="104" width="7" height="13" rx="2" fill="#ff8a3d"/>
+      <g fill="none" stroke="#0e0b0f" stroke-width="2.2" stroke-linecap="round"><path d="M262 40 q6 -6 12 0 q6 -6 12 0"/><path d="M300 22 q5 -5 10 0 q5 -5 10 0"/><path d="M332 50 q6 -6 12 0 q6 -6 12 0"/></g>
+    </svg>
+    <div class="topbar">
+      <div class="pill ${saved?'':'off'}"><span class="dot"></span>${saved?'Sauvegardé':'Non sauvegardé'}</div>
+      <div class="spacer"></div>
+      <button class="round" id="undoBtn" aria-label="Annuler" ${undoStack.length?'':'disabled'}>${svg('undo')}</button>
+      <button class="round" id="shareBtn" aria-label="Partager la partie">${svg('share')}</button>
+    </div>
+    <h1 class="title" style="font-size:${titleSize(words)}px">${h(words)}</h1>
+    ${S.sousTitre ? `<p class="subtitle">${h(S.sousTitre)}</p>` : '<div style="height:14px"></div>'}
+    <div class="chips">${S.heros.map((x,i) => `<button class="chip ${Number(x.pv)<=0?'down':''}" data-hero="${i}">${avatar(x,i)}${h(x.nom)} <small>${x.pv??'?'}/${x.pvMax??'?'} PV</small></button>`).join('')}</div>
+  </header>`;
+}
+
+function renderGroupe(){
+  const st = norm(S.statut), ribCls = st.includes('pause')?'pause':st.includes('combat')?'combat':st.includes('repos')?'repos':'explo';
+  const empty = !S.heros.length && !S.scene.titre && !S.scene.texte;
+  const ordre = S.combat.ordre || [];
+  let main;
+  if(empty){
+    main = `<div class="empty">
+      <div class="ribbon">Nouvelle partie</div>
+      <h2 class="scene">En attente du maître du jeu</h2>
+      <p>Lancez la partie avec Claude en vocal. Le MJ vous donnera un <b>lien de départ</b> : touchez-le, et la table se remplira toute seule.</p>
+      <button class="btn-gold small" id="demoBtn">Voir un exemple</button>
+    </div>`;
+  }else{
+    main = `
+    ${S.statut ? `<div class="ribbon ${ribCls}">${h(S.statut)}</div>` : ''}
+    <div class="cardtools"><button class="ring ${editScene?'on':''}" id="editScene" aria-label="Modifier la scène">${svg('plume')}</button><button class="ring" id="foldScene" aria-label="Replier">${svg(sceneCollapsed?'bas':'haut')}</button></div>
+    <div class="${sceneCollapsed?'collapsed':''}">
+      ${S.scene.titre || editScene ? `<h2 class="scene" id="sceneT" ${editScene?'contenteditable="true"':''}>${h(S.scene.titre)}</h2>` : '<div style="height:40px"></div>'}
+      ${S.scene.texte || editScene ? `<p class="scenetext" id="sceneX" ${editScene?'contenteditable="true"':''}>${h(S.scene.texte)}</p>` : ''}
+      <div class="scene-body">
+      ${ordre.length ? `<div class="label">Ordre de bataille${S.combat.round>1?` <em>· round ${S.combat.round}</em>`:''}</div>
+        <div class="order" id="order">${ordre.map((o,i) => {
+          const [hx, hi] = findHero(o.nom); const isFoe = !hx && (norm(o.type).startsWith('enn') || norm(o.type).startsWith('mon') || !o.type || o.type==='ennemi');
+          const foeDead = isFoe && S.ennemis.length && S.ennemis.filter(e => norm(e.nom)===norm(o.nom)).every(e => e.etat==='detruit') && S.ennemis.some(e => norm(e.nom)===norm(o.nom));
+          const av = hx ? avatar(hx, hi) : `<div class="av" style="background:radial-gradient(circle at 40% 35%,#4a3f38,#2a221d 70%)">${svg(o.embleme && I[o.embleme] ? o.embleme : 'crane')}</div>`;
+          const cur = i === S.combat.tour;
+          const sub = cur ? 'À jouer' : (o.init != null ? `Init. ${o.init}` : (isFoe ? 'Ennemis' : ''));
+          return `${i?`<div class="chev">${svg('chev')}</div>`:''}<div class="med ${cur?'cur':''} ${(hx&&Number(hx.pv)<=0)||foeDead?'dead':''}">${av}<b>${h(o.nom)}</b><span>${h(sub)}</span></div>`;
+        }).join('')}</div>
+        <button class="btn-gold" id="nextTurn">Tour suivant ${svg('chev')}</button>` : ''}
+      ${S.ennemis.length || ordre.length ? `<div class="label">Ennemis <em>· touchez pour changer l'état</em></div>
+        ${S.ennemis.map((e,i) => { const et = ETATS.includes(e.etat) ? e.etat : 'debout'; const [lab, ic] = ETAT_INFO[et];
+          return `<div class="foe ${et}" data-foe="${i}" role="button" tabindex="0"><div class="ic">${svg(ic)}</div><div><h4>${h(e.nom)}</h4><div class="st">${lab}${e.pvMax?` <span class="hp">· PV ${e.pv??'?'} / ${e.pvMax}</span>`:''}</div>${e.note?`<p>${h(e.note)}</p>`:''}</div><button class="x" data-delfoe="${i}" aria-label="Retirer">${svg('x')}</button></div>`; }).join('')}
+        <div class="addfoe"><input id="newFoe" placeholder="Nouvel ennemi" enterkeyhint="done"></div>` : ''}
+      ${S.consigne ? `<div class="hint">${D20('#a83a2c','#e2bf72')}<div>${h(S.consigne)}</div></div>` : ''}
+      </div>
+    </div>`;
+  }
+  const card = `<section class="parch" style="margin-top:-2px"><div class="in">${corners()}${main}</div></section>`;
+  return card + renderCompagnie();
+}
+
+function renderCompagnie(){
+  if(!S.heros.length) return '';
+  return `<section class="section dark">
+    <div class="kicker">Les héros</div><h2 class="big">La compagnie</h2>${flourish}
+    <p class="lead">${S.or!=null && S.or!=='' ? `Trésor commun : <b>${h(S.or)} pièces d'or</b>. ` : ''}Touchez une attaque, un talent ou une caractéristique pour lancer les dés.</p>
+    <button class="btn-gold small" id="restBtn">${svg('lune')} Nuit de repos</button>
+    <div class="sheets" style="margin-top:16px">${S.heros.map((x,i) => sheetHTML(x,i)).join('')}</div>
+  </section>`;
+}
+function sheetHTML(x, i){
+  const col = heroColor(x) || PALETTE[i % PALETTE.length];
+  const pv = Number(x.pv)||0, max = Number(x.pvMax)||1, pct = Math.max(0, Math.min(100, pv/max*100));
+  const car = x.carac || x.caracteristiques || {};
+  const CK = ['FOR','DEX','CON','INT','SAG','CHA'];
+  const atks = x.attaques || [], tal = x.talents || x.competences || [], inv = x.inventaire || [], etats = x.etats || [];
+  const kv = [x.ca!=null?['CA',x.ca]:null, x.initiative!=null?['Init.',typeof x.initiative==='number'?sgn(x.initiative):x.initiative]:null, x.vitesse?['Vitesse',x.vitesse]:null, x.maitrise?['Maîtrise',typeof x.maitrise==='number'?sgn(x.maitrise):x.maitrise]:null].filter(Boolean);
+  return `<div class="sheet" id="hero-${i}"><div class="in">
+      <div class="head" style="--hc:${col}">${avatar(x, i)}<div><h3>${h(x.nom)}</h3><p>${h([x.classe, x.niveau!=null?`niveau ${x.niveau}`:''].filter(Boolean).join(' · '))}</p></div></div>
+      <div class="body">
+        <div class="hprow"><div class="label" style="margin:0">Points de vie</div><div class="hpnum">${pv}<small> / ${max}</small></div></div>
+        <div class="bar"><i class="${pct<=25?'low':pct<=50?'mid':''}" style="width:${pct}%"></i></div>
+        <div class="hpctl"><button class="ring" data-hp="${i}:-1" aria-label="Moins un">−</button><button class="ring" data-hp="${i}:1" aria-label="Plus un">+</button><span class="sep"></span><input id="hpNb-${i}" type="number" inputmode="numeric" placeholder="Nb"><button class="act hurt" data-hurt="${i}">Blesser</button><button class="act heal" data-heal="${i}">Soigner</button></div>
+        ${kv.length ? `<div class="kv" style="margin-top:12px">${kv.map(([k,v]) => `<div><small>${k}</small><b>${h(v)}</b></div>`).join('')}</div>` : ''}
+        ${etats.length ? `<div class="tags" style="margin-top:10px">${etats.map(e => `<span class="tag bad">${h(e)}</span>`).join('')}</div>` : ''}
+        ${CK.some(k => car[k]!=null) ? `<div class="label">Caractéristiques</div><div class="stats6">${CK.map(k => car[k]==null ? '' : `<button class="stat" data-check="${i}:${k}"><small>${k}</small><b>${h(car[k])}</b><span>${sgn(mod(car[k]))}</span></button>`).join('')}</div>` : ''}
+        ${atks.length ? `<div class="label">Attaques</div><div class="chipsrow">${atks.map((a,j) => `<button class="rollchip" data-atk="${i}:${j}">${D20()}${h(a.nom)} <em>${a.toucher!=null?sgn(Number(a.toucher))+' · ':''}${h(a.degats||'')}</em></button>`).join('')}</div>` : ''}
+        ${tal.length ? `<div class="label">Talents</div><div class="chipsrow">${tal.map((a,j) => `<button class="rollchip" data-tal="${i}:${j}">${D20()}${h(typeof a==='string'?a:a.nom)} <em>${typeof a==='object' && a.bonus!=null ? sgn(Number(a.bonus)) : ''}</em></button>`).join('')}</div>` : ''}
+        ${x.sorts && x.sorts.length ? `<div class="label">Sorts</div><div class="tags">${x.sorts.map(s => `<span class="tag">${h(typeof s==='string'?s:s.nom)}</span>`).join('')}</div>` : ''}
+        ${inv.length ? `<div class="label">Besace</div><p class="invline">${inv.map(o => `<span>${h(typeof o==='string'?o:(o.nom + (o.qte>1?` ×${o.qte}`:'')))}</span>`).join('')}</p>` : ''}
+        ${x.notes ? `<div class="label">Notes</div><p class="notes">${h(x.notes)}</p>` : ''}
+      </div></div></div>`;
+}
+
+function wrapPanel(inner){ return `<section class="parch panel"><div class="in">${corners()}${inner}</div></section>`; }
+function emptyMsg(t){ return `<div class="empty"><p>${t}</p></div>`; }
+
+function renderCarte(){
+  const L = S.lieux;
+  return wrapPanel(`<div class="ribbon explo">Carte du parcours</div><h2 class="scene">${h(S.lieuActuel || 'Le voyage')}</h2>
+    ${L.length ? `<div class="path">${L.map((l,i) => { const cur = norm(l.nom) === norm(S.lieuActuel); const rom = ['I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII','XIII','XIV','XV'][i] || (i+1);
+      return `<div class="place ${cur?'cur':''}"><div class="node">${rom}</div><div><h4>${h(l.nom)}</h4>${l.note?`<p>${h(l.note)}</p>`:''}${cur?'<span class="here">▼ Vous êtes ici</span>':''}</div></div>`; }).join('')}</div>`
+      : emptyMsg('Aucun lieu visité pour l\'instant. Le MJ ajoutera chaque étape du parcours.')}`);
+}
+function renderQuetes(){
+  const Q = S.quetes; const order = q => norm(q.statut).startsWith('term') ? 2 : norm(q.statut).startsWith('ech') ? 3 : 1;
+  return wrapPanel(`<div class="ribbon">Registre des quêtes</div><h2 class="scene">Quêtes</h2>
+    ${Q.length ? [...Q].sort((a,b) => order(a)-order(b)).map(q => { const s = norm(q.statut); const cls = s.startsWith('term')?'terminee':s.startsWith('ech')?'echouee':'';
+      return `<div class="quest ${cls}"><div class="box">${cls==='terminee'?svg('check'):''}</div><h4>${h(q.titre)}</h4>${q.detail?`<p>${h(q.detail)}</p>`:''}<span class="st">${cls==='terminee'?'Terminée':cls==='echouee'?'Échouée':h(q.statut||'En cours')}</span></div>`; }).join('')
+      : emptyMsg('Aucune quête pour l\'instant.')}`);
+}
+function renderRecit(){
+  const J = [...S.journal].reverse();
+  return wrapPanel(`<div class="ribbon explo">Chronique</div><h2 class="scene">Le récit</h2>
+    ${J.length ? J.map(j => `<div class="entry">${j.titre||j.lieu?`<h4>${h(j.titre||j.lieu)}${j.quand?`<small>${h(j.quand)}</small>`:''}</h4>`:''}<p>${h(j.texte)}</p></div>`).join('')
+      : emptyMsg('Le récit de vos exploits s\'écrira ici, au fil de la partie.')}`);
+}
+function renderMonde(){
+  const P = S.monde.pnj;
+  return wrapPanel(`<div class="ribbon repos">Le monde</div><h2 class="scene">Personnages & lieux</h2>
+    ${P.length ? P.map((p,i) => `<div class="npc">${avatar({embleme:p.embleme||'bouclier',couleur:p.couleur||'gris'}, i)}<div><h4>${h(p.nom)}</h4>${p.role?`<p><i>${h(p.role)}</i></p>`:''}${p.note?`<p>${h(p.note)}</p>`:''}</div></div>`).join('') : emptyMsg('Les personnages rencontrés apparaîtront ici.')}
+    ${S.monde.notes ? `<div class="label">Notes du monde</div><p class="scenetext" style="font-size:19px">${h(S.monde.notes)}</p>` : ''}`);
+}
+function renderRegles(){
+  return wrapPanel(`<div class="ribbon pause">Options & règles</div><h2 class="scene">Règles de la table</h2>
+    <div class="toggle"><div><b>Dés virtuels</b><p>Désactivez pour jouer avec de vrais dés.</p></div><button class="sw ${OPT.desVirtuels?'on':''}" id="swDice" aria-label="Dés virtuels"></button></div>
+    <div class="label">Charger un lien du MJ</div>
+    <textarea class="field" id="impTxt" placeholder="Collez ici un lien du MJ ou un bloc JSON"></textarea>
+    <div class="btnrow"><button class="btn" id="impBtn">Charger</button><button class="btn" id="expBtn">Copier la sauvegarde</button><button class="btn danger" id="resetBtn">Nouvelle partie</button></div>
+    <div class="label">Comment jouer</div>
+    <div class="rules">
+      <ul>
+        <li>On joue <b>en vocal</b> avec Claude, qui est le maître du jeu (règles D&D 5e).</li>
+        <li>Quand la situation change, le MJ envoie un <b>lien</b> : touchez-le, la table se met à jour.</li>
+        <li>« <b>Pause</b> » : le MJ se tait (il peut seulement dire « Mais encore ? »). « <b>Continue MJ</b> » : il reprend là où il en était.</li>
+        <li>Combat : ordre de tour fixe décidé au début. À son tour, on peut se déplacer, faire une action, une action bonus.</li>
+        <li>« Copier la sauvegarde » donne un lien à recoller dans une nouvelle conversation pour reprendre la partie.</li>
+      </ul>
+      <p style="font-size:16px;color:var(--ink2)">Format des liens : <code>#etat={…}</code> remplace toute la partie, <code>#maj={…}</code> modifie seulement ce qui est indiqué (héros, ennemis, quêtes et lieux sont retrouvés par leur nom ; <code>"journal+":[…]</code> ajoute une entrée ; <code>"supprimer":true</code> retire un élément).</p>
+    </div>`);
+}
+
+function render(){
+  const app = document.getElementById('app');
+  const y = window.scrollY;
+  app.innerHTML = renderSky() + renderGroupe()
+    + `<div class="grid2">${renderCarte()}${renderQuetes()}</div>`
+    + `<div class="grid2">${renderRecit()}${renderMonde()}</div>`
+    + `<div class="grid2">${renderRegles()}</div>`
+    + '<div style="height:24px"></div>';
+  document.title = (S.titre || 'Chroniques') + ' – Table de jeu';
+  stars();
+  const fab = document.getElementById('fab'); fab.innerHTML = D20('rgba(0,0,0,0)','#f6d2bf'); fab.classList.toggle('hidden', !OPT.desVirtuels);
+  bind();
+  window.scrollTo(0, y);
+}
+function stars(){
+  const el = document.getElementById('stars'); if(!el) return; let s = ''; let seed = 7;
+  const r = () => (seed = (seed*9301+49297)%233280)/233280;
+  for(let i=0;i<70;i++) s += `<i style="left:${r()*100}%;top:${r()*70}%;opacity:${.3+r()*.7};transform:scale(${.6+r()*1.2});animation-delay:${r()*4}s"></i>`;
+  el.innerHTML = s;
+}
+
+/* ---------- interactions ---------- */
+const $ = id => document.getElementById(id);
+function bind(){
+  const on = (id, fn) => { const e = $(id); if(e) e.onclick = fn; };
+  document.querySelectorAll('[data-hero]').forEach(b => b.onclick = () => { const s = $('hero-' + b.dataset.hero); if(s) s.scrollIntoView({behavior:'smooth',block:'start'}); });
+  on('undoBtn', undo);
+  on('shareBtn', share);
+  on('demoBtn', () => change(() => { S = fix(DEMO()); heroSel = 0; }, 'Exemple chargé'));
+  on('editScene', () => {
+    if(editScene){ const t = $('sceneT'), x = $('sceneX'); const nt = t ? t.innerText.trim() : S.scene.titre, nx = x ? x.innerText.trim() : S.scene.texte;
+      editScene = false; if(nt !== S.scene.titre || nx !== S.scene.texte) change(() => { S.scene.titre = nt; S.scene.texte = nx; }, 'Scène modifiée'); else render(); }
+    else { editScene = true; render(); const t = $('sceneT'); if(t) t.focus(); }
+  });
+  on('foldScene', () => { sceneCollapsed = !sceneCollapsed; render(); });
+  on('nextTurn', () => change(() => { const n = S.combat.ordre.length; if(!n) return; S.combat.tour = (S.combat.tour + 1) % n; if(S.combat.tour === 0) S.combat.round = (S.combat.round||1) + 1; }));
+  document.querySelectorAll('[data-foe]').forEach(b => b.onclick = ev => {
+    if(ev.target.closest('[data-delfoe]')) return;
+    const i = +b.dataset.foe; change(() => { const e = S.ennemis[i]; const k = ETATS.indexOf(e.etat); e.etat = ETATS[(k+1) % ETATS.length]; });
+  });
+  document.querySelectorAll('[data-delfoe]').forEach(b => b.onclick = ev => { ev.stopPropagation(); const i = +b.dataset.delfoe; change(() => S.ennemis.splice(i,1), 'Ennemi retiré'); });
+  const nf = $('newFoe'); if(nf) nf.onkeydown = ev => { if(ev.key === 'Enter' && nf.value.trim()){ const v = nf.value.trim(); change(() => S.ennemis.push({nom:v, etat:'debout'}), 'Ennemi ajouté'); } };
+  on('restBtn', () => change(() => S.heros.forEach(x => { if(x.pvMax!=null) x.pv = x.pvMax; }), '🌙 La compagnie se repose : PV restaurés'));
+  const two = v => v.split(':');
+  document.querySelectorAll('[data-hp]').forEach(b => b.onclick = () => { const [i, d] = two(b.dataset.hp); change(() => { const x = S.heros[+i]; x.pv = Math.max(0, Math.min(Number(x.pvMax)||999, (Number(x.pv)||0) + Number(d))); }); });
+  const nb = i => Math.abs(parseInt(($('hpNb-' + i)||{}).value)) || 0;
+  document.querySelectorAll('[data-hurt]').forEach(b => b.onclick = () => { const i = +b.dataset.hurt, n = nb(i); if(!n) return toast('Indiquez un nombre'); change(() => { const x = S.heros[i]; x.pv = Math.max(0, (Number(x.pv)||0) - n); }, `${S.heros[i].nom} perd ${n} PV`); });
+  document.querySelectorAll('[data-heal]').forEach(b => b.onclick = () => { const i = +b.dataset.heal, n = nb(i); if(!n) return toast('Indiquez un nombre'); change(() => { const x = S.heros[i]; x.pv = Math.min(Number(x.pvMax)||999, (Number(x.pv)||0) + n); }, `${S.heros[i].nom} récupère ${n} PV`); });
+  document.querySelectorAll('[data-check]').forEach(b => b.onclick = () => { const [i, k] = two(b.dataset.check), x = S.heros[+i], c = x.carac || x.caracteristiques; rollSpec({label:`${x.nom} · test de ${k}`, des:[{n:1,f:20}], mod:mod(c[k]), adv:tray.adv}); });
+  document.querySelectorAll('[data-atk]').forEach(b => b.onclick = () => { const [i, j] = two(b.dataset.atk), x = S.heros[+i], a = x.attaques[+j];
+    rollSpec({label:`${x.nom} · ${a.nom}`, des:[{n:1,f:20}], mod:Number(a.toucher)||0, adv:tray.adv, suite:a.degats?{label:`Dégâts · ${a.nom}`, formule:a.degats}:null}); });
+  document.querySelectorAll('[data-tal]').forEach(b => b.onclick = () => { const [i, j] = two(b.dataset.tal), x = S.heros[+i], t = (x.talents||x.competences)[+j];
+    rollSpec({label:`${x.nom} · ${typeof t==='string'?t:t.nom}`, des:[{n:1,f:20}], mod:typeof t==='object'?Number(t.bonus)||0:0, adv:tray.adv}); });
+  on('swDice', () => { OPT.desVirtuels = !OPT.desVirtuels; saveOpt(); render(); toast(OPT.desVirtuels ? '🎲 Dés virtuels activés' : 'Dés virtuels désactivés : à vos vrais dés !'); });
+  on('impBtn', async () => { const ok = await importFrom($('impTxt').value); if(ok) window.scrollTo({top:0, behavior:'smooth'}); });
+  on('expBtn', share);
+  let armed = false;
+  on('resetBtn', ev => { const b = ev.currentTarget; if(!armed){ armed = true; b.textContent = 'Confirmer ?'; setTimeout(() => { armed = false; if(b.isConnected) b.textContent = 'Nouvelle partie'; }, 3000); return; }
+    change(() => { S = VIDE(); }, 'Table remise à zéro'); window.scrollTo(0,0); });
+}
+async function share(){
+  const url = location.origin + location.pathname + '#etat=' + await encodeState();
+  try{ if(navigator.share){ await navigator.share({title:S.titre||'Chroniques', text:'Sauvegarde de la partie', url}); return; } }catch(e){ if(e && e.name === 'AbortError') return; }
+  try{ await navigator.clipboard.writeText(url); toast('🔗 Lien de sauvegarde copié'); }
+  catch(e){ const t = $('impTxt'); if(t){ t.value = url; t.scrollIntoView({block:'center'}); t.select(); toast('Lien de sauvegarde affiché dans Règles'); } }
+}
+let tt; function toast(m){ const t = $('toast'); t.textContent = m; t.classList.add('show'); clearTimeout(tt); tt = setTimeout(() => t.classList.remove('show'), 2600); }
+
+/* ---------- exemple (personnages inventés) ---------- */
+function DEMO(){ return {
+  titre:'Chroniques de Valbrume', sousTitre:'Livre premier : l\'Amulette d\'Aldric', statut:'Combat',
+  scene:{titre:'La crypte sous le moulin', texte:'Les torches crépitent. Un squelette gît en morceaux, l\'autre fait face à Thorin. Deux gobelins se terrent dans le passage, et une lueur bleue filtre du sarcophage entrouvert.'},
+  combat:{actif:true, round:2, tour:1, ordre:[{nom:'Lyra', init:17},{nom:'Elwen', init:14},{nom:'Monstres', type:'ennemis'},{nom:'Thorin', init:9}]},
+  ennemis:[{nom:'Squelette n°1', etat:'detruit', note:'Pulvérisé par un projectile magique'},{nom:'Squelette n°2', etat:'debout', note:'Face à Thorin', pv:13, pvMax:13},{nom:'Gobelin à la lanterne', etat:'cache', note:'Tapi dans le passage'}],
+  consigne:'Au tour d\'Elwen : projectile magique ou bâton ? Pour le bâton, d20 + 2 (13 ou plus touche), puis 1d6 de dégâts.',
+  or:52,
+  heros:[
+    {nom:'Thorin', classe:'Guerrier nain', niveau:1, couleur:'rouge', embleme:'hache', pv:9, pvMax:13, ca:16, initiative:-1, vitesse:'7,5 m', maitrise:2, carac:{FOR:16,DEX:9,CON:15,INT:10,SAG:12,CHA:8}, attaques:[{nom:'Hache d\'armes', toucher:5, degats:'1d8+3'},{nom:'Hachette (lancer)', toucher:5, degats:'1d6+3'}], talents:[{nom:'Athlétisme', bonus:5},{nom:'Intimidation', bonus:1}], inventaire:['Hache d\'armes','Cotte de mailles','Bouclier','2 potions de soin']},
+    {nom:'Lyra', classe:'Roublarde elfe', niveau:1, couleur:'vert', embleme:'dague', pv:9, pvMax:9, ca:14, initiative:3, vitesse:'9 m', maitrise:2, carac:{FOR:8,DEX:17,CON:12,INT:13,SAG:12,CHA:14}, attaques:[{nom:'Dague', toucher:5, degats:'1d4+3'},{nom:'Arc court', toucher:5, degats:'1d6+3'}], talents:[{nom:'Discrétion', bonus:7},{nom:'Perception', bonus:3}], inventaire:['2 dagues','Arc court et 14 flèches','Outils de voleur','Clé rouillée']},
+    {nom:'Elwen', classe:'Magicienne humaine', niveau:1, couleur:'violet', embleme:'etoile', pv:4, pvMax:7, ca:12, initiative:2, maitrise:2, etats:['Concentration'], carac:{FOR:8,DEX:14,CON:13,INT:17,SAG:12,CHA:10}, attaques:[{nom:'Bâton', toucher:2, degats:'1d6'},{nom:'Trait de feu', toucher:5, degats:'1d10'}], talents:[{nom:'Arcanes', bonus:5},{nom:'Histoire', bonus:5}], sorts:['Projectile magique','Bouclier','Sommeil'], inventaire:['Bâton','Grimoire','Sacoche à composantes','Parchemin inconnu']}
+  ],
+  lieux:[{nom:'Route de Valbrume', note:'Embuscade de gobelins repoussée'},{nom:'Valbrume', note:'Le prêtre Aldric confie la quête'},{nom:'Le vieux moulin', note:'Lyra crochète la trappe'},{nom:'La crypte', note:'Combat contre les morts-vivants'}],
+  lieuActuel:'La crypte',
+  quetes:[{titre:'L\'amulette d\'Aldric', detail:'Retrouver l\'amulette volée dans la chapelle.', statut:'En cours'},{titre:'Le moulin hanté', detail:'Découvrir qui rôde la nuit autour du moulin.', statut:'En cours'},{titre:'Rejoindre Valbrume', statut:'Terminée'}],
+  journal:[{titre:'Route de Valbrume', texte:'La compagnie repousse une embuscade de gobelins et trouve une clé rouillée sur l\'un d\'eux.'},{titre:'Valbrume', texte:'Le prêtre Aldric raconte le vol de l\'amulette et supplie les héros de l\'aider.'},{titre:'La crypte', texte:'Sous le moulin, deux squelettes se dressent ; le premier tombe sous un projectile magique d\'Elwen.'}],
+  monde:{pnj:[{nom:'Aldric', role:'Prêtre de Valbrume', note:'Inquiet, il cache quelque chose sur l\'amulette.', embleme:'croix', couleur:'or'},{nom:'Mère Hulda', role:'Aubergiste', note:'Connaît toutes les rumeurs du village.', embleme:'feuille', couleur:'brun'}], notes:'Le brassard rouge des gobelins semble être un signe de ralliement.'}
+};}
+
+/* ---------- démarrage ---------- */
+document.getElementById('trayBg').onclick = closeTray;
+document.getElementById('fab').onclick = () => openTray(false);
+let ty0 = null; const trEl = document.getElementById('tray');
+trEl.addEventListener('touchstart', e => { ty0 = trEl.scrollTop <= 0 ? e.touches[0].clientY : null; }, {passive:true});
+trEl.addEventListener('touchend', e => { if(ty0 != null && e.changedTouches[0].clientY - ty0 > 80) closeTray(); ty0 = null; });
+window.addEventListener('hashchange', readHash);
+load();
+render();
+readHash();
+</script>
+</body>
+</html>
