@@ -121,6 +121,8 @@ h2.scene{font-family:var(--display);font-weight:700;font-size:clamp(18.7px,5.2vw
 .herotab .av{width:34.6px;height:34.6px;border-width:1.8px}
 .herotab b{display:block;font-family:var(--display);font-size:12.2px;line-height:1.05}
 .herotab small{font-family:var(--display);font-size:10.1px;opacity:.8}
+.herotab.all{justify-content:center;padding:0 12px;font-family:var(--display);font-weight:700;font-size:12.5px;letter-spacing:.1em;text-transform:uppercase}
+.herotab.down .av{filter:grayscale(1);opacity:.6}
 .herotab.sel{background:linear-gradient(180deg,#f7ecd0,#e6d4ac);color:var(--ink);border-color:var(--gold)}
 .sheet{position:relative;margin:0 0 14.4px;border:1.5px solid var(--gold3);border-radius:10.1px;padding:2.2px;background:#1a120b}
 .sheet>.in{border-radius:7.2px;overflow:hidden;background:var(--noise),var(--parch);background-size:144px,auto;color:var(--ink)}
@@ -370,6 +372,7 @@ const clone = o => JSON.parse(JSON.stringify(o));
 const VIDE = () => ({titre:'Chroniques',sousTitre:'',statut:'',scene:{titre:'',texte:''},combat:{actif:false,round:1,tour:0,ordre:[]},ennemis:[],consigne:'',or:0,heros:[],lieux:[],lieuActuel:'',quetes:[],journal:[],monde:{pnj:[],notes:''}});
 const XP_SEUILS = [0,300,900,2700,6500,14000,23000,34000,48000,64000,85000,100000,120000,140000,165000,195000,225000,265000,305000,355000];
 let LEVELUPS = [];
+let heroFiltre = null; // null = toutes les fiches, sinon l'index du héros affiché
 let S = VIDE(), undoStack = [], tab = 'groupe', heroSel = 0, editScene = false, sceneCollapsed = false, saved = true;
 let OPT = {desVirtuels:true};
 
@@ -764,11 +767,16 @@ function renderGroupe(){
 
 function renderCompagnie(){
   if(!S.heros.length) return '';
+  if(heroFiltre !== null && heroFiltre >= S.heros.length) heroFiltre = null;
   return `<section class="section dark">
     <div class="kicker">Les héros</div><h2 class="big">La compagnie</h2>${flourish}
     <p class="lead">${S.or!=null && S.or!=='' ? `Trésor commun : <b>${h(S.or)} pièces d'or</b>. ` : ''}Touchez une attaque, un talent ou une caractéristique pour lancer les dés.</p>
     <button class="btn-gold small" id="restBtn">${svg('lune')} Nuit de repos</button>
-    <div class="sheets" style="margin-top:16px">${S.heros.map((x,i) => sheetHTML(x,i)).join('')}</div>
+    <div class="herotabs" id="heroTabs">
+      ${S.heros.map((y,i) => `<button class="herotab ${heroFiltre===i?'sel':''} ${Number(y.pv)<=0?'down':''}" data-pick="${i}">${avatar(y,i)}<span><b>${h(y.nom)}</b><small>${y.pv??'?'}/${y.pvMax??'?'} PV</small></span></button>`).join('')}
+      ${S.heros.length > 1 ? `<button class="herotab all ${heroFiltre===null?'sel':''}" data-pick="tous">Tous</button>` : ''}
+    </div>
+    <div class="sheets">${S.heros.map((x,i) => (heroFiltre===null || heroFiltre===i) ? sheetHTML(x,i) : '').join('')}</div>
   </section>`;
 }
 function xpInfo(x){
@@ -882,7 +890,9 @@ function stars(){
 const $ = id => document.getElementById(id);
 function bind(){
   const on = (id, fn) => { const e = $(id); if(e) e.onclick = fn; };
-  document.querySelectorAll('[data-hero]').forEach(b => b.onclick = () => { const s = $('hero-' + b.dataset.hero); if(s) s.scrollIntoView({behavior:'smooth',block:'start'}); });
+  const pick = (v, scroll) => { heroFiltre = v === 'tous' ? null : +v; render(); if(scroll){ const t = $('heroTabs'); if(t) t.scrollIntoView({behavior:'smooth', block:'start'}); } };
+  document.querySelectorAll('[data-pick]').forEach(b => b.onclick = () => pick(b.dataset.pick, false));
+  document.querySelectorAll('[data-hero]').forEach(b => b.onclick = () => pick(b.dataset.hero, true));
   on('undoBtn', undo);
   on('shareBtn', share);
   on('demoBtn', () => change(() => { S = fix(DEMO()); heroSel = 0; }, 'Exemple chargé'));
