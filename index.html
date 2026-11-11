@@ -137,6 +137,14 @@ h2.scene{font-family:var(--display);font-weight:700;font-size:clamp(18.7px,5.2vw
 .bar i{display:block;height:100%;border-radius:719.3px;background:linear-gradient(180deg,#f08a7e,#c23a2f 55%,#9a261d);box-shadow:inset 0 2px 0 rgba(255,255,255,.35);transition:width .4s}
 .bar i.mid{background:linear-gradient(180deg,#f3c27a,#d48a2c 55%,#a8641a)}
 .bar i.low{background:linear-gradient(180deg,#e06a5e,#8e1d16 60%,#5e100b)}
+.xprow{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.xprow .label{margin:0;flex:1}
+.xpnum{font-family:var(--display);font-weight:700;font-size:15px;color:#7a5a1c;white-space:nowrap}
+.xpnum small{font-size:12px;color:var(--ink3);font-weight:600}
+.xpbar{height:12px;margin:5px 0 12px;padding:2.5px;border-radius:999px;background:#3b2a1b;box-shadow:inset 0 2px 4px rgba(0,0,0,.5)}
+.xpbar i{display:block;height:100%;border-radius:999px;background:linear-gradient(180deg,#f7e3a0,#d9b25f 55%,#a3782b);box-shadow:inset 0 1px 0 rgba(255,255,255,.45);transition:width .4s}
+.xpbar.up i{background:linear-gradient(180deg,#fff2c4,#f0c24e 55%,#c8902a);box-shadow:0 0 8px 2px rgba(240,194,78,.7)}
+.lvlup{font-family:var(--display);font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#9a2a20;margin-left:6px}
 .hpctl{display:flex;flex-wrap:wrap;align-items:center;gap:7.2px}
 .hpctl .ring{width:40.3px;height:40.3px}
 .hpctl .sep{width:1px;height:28.8px;background:var(--ink3);opacity:.5;margin:0 2.9px}
@@ -467,7 +475,7 @@ function validate(d, kind){
         break;
       case 'heros':
         list(v, p, (it, q) => named(it, q, 'nom', {texteSeulInterdit:true, check:(o, r) => {
-          ['pv','pvMax','ca'].forEach(f => num(o[f], `${r} › ${f}`));
+          ['pv','pvMax','ca','xp','xpProchain'].forEach(f => num(o[f], `${r} › ${f}`));
           ['niveau','initiative','maitrise','vitesse'].forEach(f => numOrTxt(o[f], `${r} › ${f}`));
           ['classe','couleur','embleme','notes'].forEach(f => txt(o[f], `${r} › ${f}`));
           const c = o.carac || o.caracteristiques;
@@ -749,6 +757,16 @@ function renderCompagnie(){
     <div class="sheets" style="margin-top:16px">${S.heros.map((x,i) => sheetHTML(x,i)).join('')}</div>
   </section>`;
 }
+const XP_SEUILS = [0,300,900,2700,6500,14000,23000,34000,48000,64000,85000,100000,120000,140000,165000,195000,225000,265000,305000,355000];
+function xpInfo(x){
+  if(x.xp == null && x.niveau == null) return null;
+  const lvl = Math.max(1, Math.min(20, parseInt(x.niveau) || 1));
+  const xp = Math.max(0, Number(x.xp) || 0);
+  const bas = XP_SEUILS[lvl - 1];
+  const haut = x.xpProchain != null && isFinite(Number(x.xpProchain)) ? Number(x.xpProchain) : (lvl < 20 ? XP_SEUILS[lvl] : null);
+  const pct = haut == null ? 100 : Math.max(0, Math.min(100, (xp - bas) / Math.max(1, haut - bas) * 100));
+  return {xp, haut, pct, up: haut != null && xp >= haut};
+}
 function sheetHTML(x, i){
   const col = heroColor(x) || PALETTE[i % PALETTE.length];
   const pv = Number(x.pv)||0, max = Number(x.pvMax)||1, pct = Math.max(0, Math.min(100, pv/max*100));
@@ -759,6 +777,8 @@ function sheetHTML(x, i){
   return `<div class="sheet" id="hero-${i}"><div class="in">
       <div class="head" style="--hc:${col}">${avatar(x, i)}<div><h3>${h(x.nom)}</h3><p>${h([x.classe, x.niveau!=null?`niveau ${x.niveau}`:''].filter(Boolean).join(' · '))}</p></div></div>
       <div class="body">
+        ${(() => { const X = xpInfo(x); return X ? `<div class="xprow"><div class="label">Expérience${X.up ? '<span class="lvlup">· niveau supérieur !</span>' : ''}</div><div class="xpnum">${X.xp}${X.haut != null ? `<small> / ${X.haut} XP</small>` : '<small> XP · max</small>'}</div></div>
+        <div class="xpbar ${X.up ? 'up' : ''}"><i style="width:${X.pct}%"></i></div>` : ''; })()}
         <div class="hprow"><div class="label" style="margin:0">Points de vie</div><div class="hpnum">${pv}<small> / ${max}</small></div></div>
         <div class="bar"><i class="${pct<=25?'low':pct<=50?'mid':''}" style="width:${pct}%"></i></div>
         <div class="hpctl"><button class="ring" data-hp="${i}:-1" aria-label="Moins un">−</button><button class="ring" data-hp="${i}:1" aria-label="Plus un">+</button><span class="sep"></span><input id="hpNb-${i}" type="number" inputmode="numeric" placeholder="Nb"><button class="act hurt" data-hurt="${i}">Blesser</button><button class="act heal" data-heal="${i}">Soigner</button></div>
@@ -901,9 +921,9 @@ function DEMO(){ return {
   consigne:'Au tour d\'Elwen : projectile magique ou bâton ? Pour le bâton, d20 + 2 (13 ou plus touche), puis 1d6 de dégâts.',
   or:52,
   heros:[
-    {nom:'Thorin', classe:'Guerrier nain', niveau:1, couleur:'rouge', embleme:'hache', pv:9, pvMax:13, ca:16, initiative:-1, vitesse:'7,5 m', maitrise:2, carac:{FOR:16,DEX:9,CON:15,INT:10,SAG:12,CHA:8}, attaques:[{nom:'Hache d\'armes', toucher:5, degats:'1d8+3'},{nom:'Hachette (lancer)', toucher:5, degats:'1d6+3'}], talents:[{nom:'Athlétisme', bonus:5},{nom:'Intimidation', bonus:1}], inventaire:['Hache d\'armes','Cotte de mailles','Bouclier','2 potions de soin']},
-    {nom:'Lyra', classe:'Roublarde elfe', niveau:1, couleur:'vert', embleme:'dague', pv:9, pvMax:9, ca:14, initiative:3, vitesse:'9 m', maitrise:2, carac:{FOR:8,DEX:17,CON:12,INT:13,SAG:12,CHA:14}, attaques:[{nom:'Dague', toucher:5, degats:'1d4+3'},{nom:'Arc court', toucher:5, degats:'1d6+3'}], talents:[{nom:'Discrétion', bonus:7},{nom:'Perception', bonus:3}], inventaire:['2 dagues','Arc court et 14 flèches','Outils de voleur','Clé rouillée']},
-    {nom:'Elwen', classe:'Magicienne humaine', niveau:1, couleur:'violet', embleme:'etoile', pv:4, pvMax:7, ca:12, initiative:2, maitrise:2, etats:['Concentration'], carac:{FOR:8,DEX:14,CON:13,INT:17,SAG:12,CHA:10}, attaques:[{nom:'Bâton', toucher:2, degats:'1d6'},{nom:'Trait de feu', toucher:5, degats:'1d10'}], talents:[{nom:'Arcanes', bonus:5},{nom:'Histoire', bonus:5}], sorts:['Projectile magique','Bouclier','Sommeil'], inventaire:['Bâton','Grimoire','Sacoche à composantes','Parchemin inconnu']}
+    {nom:'Thorin', classe:'Guerrier nain', niveau:1, xp:180, couleur:'rouge', embleme:'hache', pv:9, pvMax:13, ca:16, initiative:-1, vitesse:'7,5 m', maitrise:2, carac:{FOR:16,DEX:9,CON:15,INT:10,SAG:12,CHA:8}, attaques:[{nom:'Hache d\'armes', toucher:5, degats:'1d8+3'},{nom:'Hachette (lancer)', toucher:5, degats:'1d6+3'}], talents:[{nom:'Athlétisme', bonus:5},{nom:'Intimidation', bonus:1}], inventaire:['Hache d\'armes','Cotte de mailles','Bouclier','2 potions de soin']},
+    {nom:'Lyra', classe:'Roublarde elfe', niveau:1, xp:300, couleur:'vert', embleme:'dague', pv:9, pvMax:9, ca:14, initiative:3, vitesse:'9 m', maitrise:2, carac:{FOR:8,DEX:17,CON:12,INT:13,SAG:12,CHA:14}, attaques:[{nom:'Dague', toucher:5, degats:'1d4+3'},{nom:'Arc court', toucher:5, degats:'1d6+3'}], talents:[{nom:'Discrétion', bonus:7},{nom:'Perception', bonus:3}], inventaire:['2 dagues','Arc court et 14 flèches','Outils de voleur','Clé rouillée']},
+    {nom:'Elwen', classe:'Magicienne humaine', niveau:1, xp:75, couleur:'violet', embleme:'etoile', pv:4, pvMax:7, ca:12, initiative:2, maitrise:2, etats:['Concentration'], carac:{FOR:8,DEX:14,CON:13,INT:17,SAG:12,CHA:10}, attaques:[{nom:'Bâton', toucher:2, degats:'1d6'},{nom:'Trait de feu', toucher:5, degats:'1d10'}], talents:[{nom:'Arcanes', bonus:5},{nom:'Histoire', bonus:5}], sorts:['Projectile magique','Bouclier','Sommeil'], inventaire:['Bâton','Grimoire','Sacoche à composantes','Parchemin inconnu']}
   ],
   lieux:[{nom:'Route de Valbrume', note:'Embuscade de gobelins repoussée'},{nom:'Valbrume', note:'Le prêtre Aldric confie la quête'},{nom:'Le vieux moulin', note:'Lyra crochète la trappe'},{nom:'La crypte', note:'Combat contre les morts-vivants'}],
   lieuActuel:'La crypte',
