@@ -144,7 +144,10 @@ h2.scene{font-family:var(--display);font-weight:700;font-size:clamp(18.7px,5.2vw
 .xpbar{height:12px;margin:5px 0 12px;padding:2.5px;border-radius:999px;background:#3b2a1b;box-shadow:inset 0 2px 4px rgba(0,0,0,.5)}
 .xpbar i{display:block;height:100%;border-radius:999px;background:linear-gradient(180deg,#f7e3a0,#d9b25f 55%,#a3782b);box-shadow:inset 0 1px 0 rgba(255,255,255,.45);transition:width .4s}
 .xpbar.up i{background:linear-gradient(180deg,#fff2c4,#f0c24e 55%,#c8902a);box-shadow:0 0 8px 2px rgba(240,194,78,.7)}
-.lvlup{font-family:var(--display);font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#9a2a20;margin-left:6px}
+.xprow .label{white-space:nowrap}
+.lvlbadge{display:inline-flex;align-items:center;gap:8px;margin:0 0 8px;padding:5px 12px;border-radius:999px;border:1.5px solid #b98b34;background:linear-gradient(180deg,#fbeab0,#e2bd66);color:#5a3a0c;font-family:var(--display);font-weight:700;font-size:12px;letter-spacing:.08em;text-transform:uppercase;box-shadow:0 0 10px 1px rgba(240,194,78,.55);animation:lvlglow 1.6s ease-in-out infinite}
+.lvlbadge span{font-size:15px;line-height:1;opacity:.7}
+@keyframes lvlglow{0%,100%{box-shadow:0 0 6px rgba(240,194,78,.45)}50%{box-shadow:0 0 16px 3px rgba(240,194,78,.8)}}
 .hpctl{display:flex;flex-wrap:wrap;align-items:center;gap:7.2px}
 .hpctl .ring{width:40.3px;height:40.3px}
 .hpctl .sep{width:1px;height:28.8px;background:var(--ink3);opacity:.5;margin:0 2.9px}
@@ -365,6 +368,8 @@ const clone = o => JSON.parse(JSON.stringify(o));
 
 /* ---------- état ---------- */
 const VIDE = () => ({titre:'Chroniques',sousTitre:'',statut:'',scene:{titre:'',texte:''},combat:{actif:false,round:1,tour:0,ordre:[]},ennemis:[],consigne:'',or:0,heros:[],lieux:[],lieuActuel:'',quetes:[],journal:[],monde:{pnj:[],notes:''}});
+const XP_SEUILS = [0,300,900,2700,6500,14000,23000,34000,48000,64000,85000,100000,120000,140000,165000,195000,225000,265000,305000,355000];
+let LEVELUPS = [];
 let S = VIDE(), undoStack = [], tab = 'groupe', heroSel = 0, editScene = false, sceneCollapsed = false, saved = true;
 let OPT = {desVirtuels:true};
 
@@ -374,7 +379,7 @@ function load(){
   const tryState = raw => { const d = JSON.parse(raw); const errs = validate(d, 'etat'); if(errs.length) throw new Error(errs.join(' ; ')); S = fix(d); draw(); };
   let cur = null; try{ cur = localStorage.getItem(KEY); }catch(e){}
   if(!cur){ S = VIDE(); return; }
-  try{ tryState(cur); return; }
+  try{ LEVELUPS = []; tryState(cur); if(LEVELUPS.length) save(); return; }
   catch(e1){
     try{ localStorage.setItem(KEY_BROKEN, cur); }catch(e){}
     let prev = null; try{ prev = localStorage.getItem(KEY_PREV); }catch(e){}
@@ -405,12 +410,20 @@ function fix(s){
   o.lieux = o.lieux.map(l => typeof l === 'string' ? {nom:l} : l);
   o.quetes = o.quetes.map(q => typeof q === 'string' ? {titre:q} : q);
   o.journal = o.journal.map(j => typeof j === 'string' ? {texte:j} : j);
+  // Montée de niveau automatique quand l'XP atteint le seuil (jamais de descente)
+  o.heros.forEach(x => {
+    if(!isObj(x) || x.xp == null || !isFinite(Number(x.xp))) return;
+    const xp = Number(x.xp), lvl = Math.max(1, parseInt(x.niveau) || 1); let n = lvl;
+    if(x.xpProchain != null && isFinite(Number(x.xpProchain)) && xp >= Number(x.xpProchain)){ n = lvl + 1; delete x.xpProchain; }
+    while(n < 20 && xp >= XP_SEUILS[n]) n++;
+    if(n > lvl){ x.niveau = n; x.niveauMonte = n; LEVELUPS.push(`⬆ ${x.nom} passe niveau ${n} !`); }
+  });
   o.combat.tour = Math.max(0, parseInt(o.combat.tour) || 0); o.combat.round = Math.max(1, parseInt(o.combat.round) || 1);
   return o;
 }
 // Applique une modification ; si elle provoque une erreur, on revient à l'état stable précédent.
 function change(fn, msg, errTitle){
-  const before = JSON.stringify(S);
+  const before = JSON.stringify(S); LEVELUPS = [];
   try{ fn(); S = fix(S); draw(); }
   catch(e){
     console.error(e);
@@ -419,7 +432,8 @@ function change(fn, msg, errTitle){
     return false;
   }
   undoStack.push(before); if(undoStack.length > 40) undoStack.shift();
-  save(); render(); if(msg) toast(msg);
+  save(); render();
+  if(LEVELUPS.length) toast(LEVELUPS.join(' · ')); else if(msg) toast(msg);
   return true;
 }
 function undo(){
@@ -757,7 +771,6 @@ function renderCompagnie(){
     <div class="sheets" style="margin-top:16px">${S.heros.map((x,i) => sheetHTML(x,i)).join('')}</div>
   </section>`;
 }
-const XP_SEUILS = [0,300,900,2700,6500,14000,23000,34000,48000,64000,85000,100000,120000,140000,165000,195000,225000,265000,305000,355000];
 function xpInfo(x){
   if(x.xp == null && x.niveau == null) return null;
   const lvl = Math.max(1, Math.min(20, parseInt(x.niveau) || 1));
@@ -777,7 +790,7 @@ function sheetHTML(x, i){
   return `<div class="sheet" id="hero-${i}"><div class="in">
       <div class="head" style="--hc:${col}">${avatar(x, i)}<div><h3>${h(x.nom)}</h3><p>${h([x.classe, x.niveau!=null?`niveau ${x.niveau}`:''].filter(Boolean).join(' · '))}</p></div></div>
       <div class="body">
-        ${(() => { const X = xpInfo(x); return X ? `<div class="xprow"><div class="label">Expérience${X.up ? '<span class="lvlup">· niveau supérieur !</span>' : ''}</div><div class="xpnum">${X.xp}${X.haut != null ? `<small> / ${X.haut} XP</small>` : '<small> XP · max</small>'}</div></div>
+        ${(() => { const X = xpInfo(x); return X ? `${x.niveauMonte ? `<button class="lvlbadge" data-lvlok="${i}" aria-label="Masquer">▲ Niveau supérieur ! Niveau ${h(x.niveau)} <span>×</span></button>` : ''}<div class="xprow"><div class="label">Expérience</div><div class="xpnum">${X.xp}${X.haut != null ? `<small> / ${X.haut} XP</small>` : '<small> XP · max</small>'}</div></div>
         <div class="xpbar ${X.up ? 'up' : ''}"><i style="width:${X.pct}%"></i></div>` : ''; })()}
         <div class="hprow"><div class="label" style="margin:0">Points de vie</div><div class="hpnum">${pv}<small> / ${max}</small></div></div>
         <div class="bar"><i class="${pct<=25?'low':pct<=50?'mid':''}" style="width:${pct}%"></i></div>
@@ -886,6 +899,7 @@ function bind(){
   });
   document.querySelectorAll('[data-delfoe]').forEach(b => b.onclick = ev => { ev.stopPropagation(); const i = +b.dataset.delfoe; change(() => S.ennemis.splice(i,1), 'Ennemi retiré'); });
   const nf = $('newFoe'); if(nf) nf.onkeydown = ev => { if(ev.key === 'Enter' && nf.value.trim()){ const v = nf.value.trim(); change(() => S.ennemis.push({nom:v, etat:'debout'}), 'Ennemi ajouté'); } };
+  document.querySelectorAll('[data-lvlok]').forEach(b => b.onclick = () => { const i = +b.dataset.lvlok; change(() => { delete S.heros[i].niveauMonte; }); });
   on('restBtn', () => change(() => S.heros.forEach(x => { if(x.pvMax!=null) x.pv = x.pvMax; }), '🌙 La compagnie se repose : PV restaurés'));
   const two = v => v.split(':');
   document.querySelectorAll('[data-hp]').forEach(b => b.onclick = () => { const [i, d] = two(b.dataset.hp); change(() => { const x = S.heros[+i]; x.pv = Math.max(0, Math.min(Number(x.pvMax)||999, (Number(x.pv)||0) + Number(d))); }); });
