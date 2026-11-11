@@ -275,6 +275,15 @@ nav.tabs button.on svg{filter:drop-shadow(0 0 4.3px rgba(217,178,95,.6))}
 .hist li{display:flex;justify-content:space-between;gap:7.2px;padding:5.8px 2px;border-bottom:1px solid rgba(120,90,55,.25);font-size:12.2px}
 .hist li b{font-family:var(--display)}
 
+.errbox{position:fixed;left:50%;top:calc(12px + env(safe-area-inset-top));z-index:70;transform:translate(-50%,-160%);width:min(92vw,520px);max-height:70vh;overflow-y:auto;padding:14px 16px 12px 18px;border-radius:10px;border:1.5px solid #c9a35a;border-left:7px solid #b23a2e;background:var(--noise),#f1e5c9;background-size:144px,auto;color:var(--ink);box-shadow:0 12px 30px rgba(0,0,0,.65);transition:transform .3s}
+.errbox.show{transform:translate(-50%,0)}
+.errbox h4{margin:0 0 4px;font-family:var(--display);font-size:16px;letter-spacing:.06em;color:#9a2a20;text-transform:uppercase}
+.errbox p{margin:0 0 6px;font-size:14.5px}
+.errbox ul{margin:4px 0 8px;padding-left:18px;font-size:14px}
+.errbox li{margin:2px 0;word-break:break-word}
+.errbox pre{margin:4px 0 8px;padding:6px 8px;border-radius:5px;background:rgba(120,90,55,.15);font-size:12px;white-space:pre-wrap;word-break:break-all}
+.errbox .btnrow{margin-top:6px}
+.errbox .btn{height:38px;font-size:12px}
 .toast{position:fixed;left:50%;top:calc(11.5px + env(safe-area-inset-top));z-index:60;transform:translate(-50%,-140%);max-width:67.5vw;padding:10.1px 15.8px;border-radius:8.6px;border:1.5px solid var(--gold);background:#1b140e;color:var(--cream);font-size:13px;box-shadow:0 7.2px 21.6px rgba(0,0,0,.6);transition:transform .3s}
 .toast.show{transform:translate(-50%,0)}
 @media (max-width:302.4px){body{font-size:12.2px}.parch>.in{padding:18.7px 13px}.cardtools{right:13px}.scenetext,.hint{font-size:16px}.hint svg{width:37.4px;height:37.4px}.med{width:60.5px}.med .av{width:50.4px;height:50.4px}nav.tabs button{font-size:7.6px}nav.tabs svg{width:19.4px;height:19.4px}}
@@ -286,6 +295,7 @@ nav.tabs button.on svg{filter:drop-shadow(0 0 4.3px rgba(217,178,95,.6))}
 <div class="tray-bg" id="trayBg"></div>
 <div class="tray" id="tray" role="dialog" aria-label="Lancer de dés"></div>
 <div class="toast" id="toast"></div>
+<div class="errbox" id="errbox" role="alert" aria-live="assertive"></div>
 
 <script>
 /* =========================================================
@@ -350,12 +360,30 @@ const VIDE = () => ({titre:'Chroniques',sousTitre:'',statut:'',scene:{titre:'',t
 let S = VIDE(), undoStack = [], tab = 'groupe', heroSel = 0, editScene = false, sceneCollapsed = false, saved = true;
 let OPT = {desVirtuels:true};
 
+const KEY_PREV = KEY + '.precedent', KEY_BROKEN = KEY + '.illisible';
 function load(){
   try{ const o = JSON.parse(localStorage.getItem(KEY_OPT)); if(o) OPT = Object.assign(OPT,o); }catch(e){}
-  try{ const s = JSON.parse(localStorage.getItem(KEY)); if(s) S = fix(s); }catch(e){}
+  const tryState = raw => { const d = JSON.parse(raw); const errs = validate(d, 'etat'); if(errs.length) throw new Error(errs.join(' ; ')); S = fix(d); draw(); };
+  let cur = null; try{ cur = localStorage.getItem(KEY); }catch(e){}
+  if(!cur){ S = VIDE(); return; }
+  try{ tryState(cur); return; }
+  catch(e1){
+    try{ localStorage.setItem(KEY_BROKEN, cur); }catch(e){}
+    let prev = null; try{ prev = localStorage.getItem(KEY_PREV); }catch(e){}
+    if(prev){
+      try{ tryState(prev); try{ localStorage.setItem(KEY, prev); }catch(e){}
+        showError('Partie enregistrée illisible', ['La dernière version enregistrée provoquait une erreur : la version stable précédente a été restaurée.', errText(e1)]); return; }
+      catch(e2){}
+    }
+    S = VIDE();
+    showError('Partie enregistrée illisible', ['Impossible d\'afficher la partie enregistrée. Les données sont conservées dans le navigateur, rien n\'a été effacé.', 'Demandez au MJ un lien #etat= complet pour reprendre.', errText(e1)]);
+  }
 }
 function save(){
-  try{ localStorage.setItem(KEY, JSON.stringify(S)); saved = true; }catch(e){ saved = false; }
+  try{
+    const old = localStorage.getItem(KEY); if(old) localStorage.setItem(KEY_PREV, old);
+    localStorage.setItem(KEY, JSON.stringify(S)); saved = true;
+  }catch(e){ saved = false; }
 }
 function saveOpt(){ try{ localStorage.setItem(KEY_OPT, JSON.stringify(OPT)); }catch(e){} }
 function fix(s){
@@ -369,15 +397,119 @@ function fix(s){
   o.lieux = o.lieux.map(l => typeof l === 'string' ? {nom:l} : l);
   o.quetes = o.quetes.map(q => typeof q === 'string' ? {titre:q} : q);
   o.journal = o.journal.map(j => typeof j === 'string' ? {texte:j} : j);
+  o.combat.tour = Math.max(0, parseInt(o.combat.tour) || 0); o.combat.round = Math.max(1, parseInt(o.combat.round) || 1);
   return o;
 }
-function change(fn, msg){
-  undoStack.push(JSON.stringify(S)); if(undoStack.length > 40) undoStack.shift();
-  fn(); save(); render(); if(msg) toast(msg);
+// Applique une modification ; si elle provoque une erreur, on revient à l'état stable précédent.
+function change(fn, msg, errTitle){
+  const before = JSON.stringify(S);
+  try{ fn(); S = fix(S); draw(); }
+  catch(e){
+    console.error(e);
+    try{ S = fix(JSON.parse(before)); draw(); }catch(e2){}
+    showError(errTitle || 'Action impossible', ['La partie n\'a pas été modifiée : la version précédente est conservée.', errText(e)]);
+    return false;
+  }
+  undoStack.push(before); if(undoStack.length > 40) undoStack.shift();
+  save(); render(); if(msg) toast(msg);
+  return true;
 }
 function undo(){
   if(!undoStack.length) return;
-  S = fix(JSON.parse(undoStack.pop())); save(); render(); toast('Action annulée');
+  const prev = undoStack.pop();
+  change(() => { S = fix(JSON.parse(prev)); }, 'Action annulée');
+  undoStack.pop(); // l'annulation ne s'empile pas elle-même
+  render();
+}
+
+/* ---------- vérification des données reçues ---------- */
+const T = {
+  str: v => typeof v === 'string' || typeof v === 'number',
+  num: v => (typeof v === 'number' && isFinite(v)) || (typeof v === 'string' && v.trim() !== '' && isFinite(Number(v))),
+};
+const show = v => { const t = JSON.stringify(v); return t && t.length > 40 ? t.slice(0, 40) + '…' : t; };
+function validate(d, kind){
+  const E = [];
+  if(!isObj(d)) return ['Le contenu doit être un objet JSON entre accolades { … }, pas ' + (Array.isArray(d) ? 'une liste [ … ]' : show(d)) + '.'];
+  const txt = (v, p) => { if(v != null && !T.str(v)) E.push(`${p} : doit être un texte, reçu ${show(v)}`); };
+  const num = (v, p) => { if(v != null && !T.num(v)) E.push(`${p} : doit être un nombre, reçu ${show(v)}`); };
+  const numOrTxt = (v, p) => { if(v != null && !T.str(v)) E.push(`${p} : doit être un nombre ou un texte, reçu ${show(v)}`); };
+  const obj = (v, p) => { if(v != null && !isObj(v)){ E.push(`${p} : doit être un objet { … }, reçu ${show(v)}`); return false; } return v != null; };
+  const list = (v, p, each) => {
+    if(v == null) return;
+    if(!Array.isArray(v)){ E.push(`${p} : doit être une liste [ … ], reçu ${show(v)}`); return; }
+    v.forEach((it, i) => each(it, `${p}[${i}]`));
+  };
+  const named = (it, p, key, fields) => {
+    if(typeof it === 'string' && key !== 'nomObligatoire') { if(fields && fields.texteSeulInterdit) E.push(`${p} : doit être un objet { "${key}": … }`); return; }
+    if(!isObj(it)){ E.push(`${p} : doit être un objet { … }, reçu ${show(it)}`); return; }
+    const label = it[key] != null ? ` (${String(it[key]).slice(0,30)})` : '';
+    if(it[key] == null || String(it[key]).trim() === '') E.push(`${p} : il manque "${key}"`);
+    else if(!T.str(it[key])) E.push(`${p} › ${key} : doit être un texte`);
+    if(fields) fields.check && fields.check(it, p + label);
+  };
+  const strList = (v, p) => list(v, p, (it, q) => { if(!T.str(it) && !(isObj(it) && T.str(it.nom))) E.push(`${q} : doit être un texte, reçu ${show(it)}`); });
+  for(const [k0, v] of Object.entries(d)){
+    const k = k0.replace(/[+!]$/, ''), p = k0;
+    switch(k){
+      case 'maj': if(obj(v, p)) E.push(...validate(v, 'maj')); break;
+      case 'titre': case 'sousTitre': case 'statut': case 'consigne': case 'lieuActuel': txt(v, p); break;
+      case 'or': numOrTxt(v, p); break;
+      case 'scene': if(obj(v, p)){ txt(v.titre, p + '.titre'); txt(v.texte, p + '.texte'); } break;
+      case 'combat':
+        if(obj(v, p)){ num(v.round, p + '.round'); num(v.tour, p + '.tour');
+          list(v.ordre, p + '.ordre', (it, q) => named(it, q, 'nom', {texteSeulInterdit:true, check:(o, r) => { num(o.init, r + ' › init'); txt(o.type, r + ' › type'); }})); }
+        break;
+      case 'ennemis':
+        list(v, p, (it, q) => named(it, q, 'nom', {texteSeulInterdit:true, check:(o, r) => {
+          if(o.etat != null && !ETATS.includes(o.etat)) E.push(`${r} › etat : « ${o.etat} » inconnu (attendu : ${ETATS.join(', ')})`);
+          num(o.pv, r + ' › pv'); num(o.pvMax, r + ' › pvMax'); txt(o.note, r + ' › note'); }}));
+        break;
+      case 'heros':
+        list(v, p, (it, q) => named(it, q, 'nom', {texteSeulInterdit:true, check:(o, r) => {
+          ['pv','pvMax','ca'].forEach(f => num(o[f], `${r} › ${f}`));
+          ['niveau','initiative','maitrise','vitesse'].forEach(f => numOrTxt(o[f], `${r} › ${f}`));
+          ['classe','couleur','embleme','notes'].forEach(f => txt(o[f], `${r} › ${f}`));
+          const c = o.carac || o.caracteristiques;
+          if(c != null){ if(!isObj(c)) E.push(`${r} › carac : doit être un objet { "FOR": 10, … }`); else Object.entries(c).forEach(([ck, cv]) => num(cv, `${r} › carac.${ck}`)); }
+          list(o.attaques, r + ' › attaques', (a, s2) => named(a, s2, 'nom', {texteSeulInterdit:true, check:(aa, s3) => { num(aa.toucher, s3 + ' › toucher'); txt(aa.degats, s3 + ' › degats'); }}));
+          list(o.talents || o.competences, r + ' › talents', (a, s2) => { if(T.str(a)) return; named(a, s2, 'nom', {check:(aa, s3) => num(aa.bonus, s3 + ' › bonus')}); });
+          strList(o.sorts, r + ' › sorts'); strList(o.inventaire, r + ' › inventaire'); strList(o.etats, r + ' › etats');
+        }}));
+        break;
+      case 'lieux': list(v, p, (it, q) => { if(T.str(it)) return; named(it, q, 'nom', {check:(o, r) => txt(o.note, r + ' › note')}); }); break;
+      case 'quetes': list(v, p, (it, q) => { if(T.str(it)) return; named(it, q, 'titre', {check:(o, r) => { txt(o.detail, r + ' › detail'); txt(o.statut, r + ' › statut'); }}); }); break;
+      case 'journal': list(v, p, (it, q) => { if(T.str(it)) return; if(!isObj(it)) return E.push(`${q} : doit être un objet { "titre", "texte" }`); txt(it.titre, q + ' › titre'); txt(it.texte, q + ' › texte'); }); break;
+      case 'monde':
+        if(obj(v, p)){ txt(v.notes, p + '.notes'); list(v.pnj, p + '.pnj', (it, q) => named(it, q, 'nom', {texteSeulInterdit:true, check:(o, r) => { txt(o.role, r + ' › role'); txt(o.note, r + ' › note'); }})); }
+        break;
+    }
+  }
+  return E;
+}
+function errText(e){ return e && e.message ? e.message : String(e); }
+function jsonProblem(e, t){
+  const out = ['Le texte reçu n\'est pas un JSON valide : ' + errText(e)];
+  if(/[“”„«»]/.test(t)) out.push('Il contient des guillemets typographiques (“ ” ou « ») : il faut des guillemets droits ".');
+  const open = (t.match(/[{[]/g) || []).length, close = (t.match(/[}\]]/g) || []).length;
+  if(open > close) out.push(`Le lien semble coupé : ${open - close} accolade(s) ou crochet(s) non fermé(s). Il a peut-être été tronqué en le copiant.`);
+  const m = errText(e).match(/position (\d+)/) || errText(e).match(/column (\d+)/);
+  if(m){ const i = +m[1]; out.push({extrait: (i > 30 ? '…' : '') + t.slice(Math.max(0, i - 30), i) + ' ⟵ ici ⟶ ' + t.slice(i, i + 30) + '…'}); }
+  out.push(`Longueur reçue : ${t.length} caractères.`);
+  return out;
+}
+let errDetail = '';
+function showError(title, lines){
+  const box = document.getElementById('errbox'); if(!box) return;
+  const L = (Array.isArray(lines) ? lines : [lines]).filter(x => x != null && x !== '');
+  const first = typeof L[0] === 'string' && /conserv|n'a pas été modifiée|restaurée/.test(L[0]) ? L.shift() : 'La partie en cours n\'a pas été modifiée.';
+  errDetail = title + '\n' + L.map(x => typeof x === 'string' ? '- ' + x : x.extrait).join('\n');
+  box.innerHTML = `<h4>⚠ ${h(title)}</h4><p>${h(first)}</p>
+    <ul>${L.map(x => typeof x === 'string' ? `<li>${h(x)}</li>` : `<li>Endroit de l'erreur :<pre>${h(x.extrait)}</pre></li>`).join('')}</ul>
+    <div class="btnrow"><button class="btn" id="errCopy">Copier le détail</button><button class="btn" id="errClose">Fermer</button></div>`;
+  box.classList.add('show');
+  box.querySelector('#errClose').onclick = () => box.classList.remove('show');
+  box.querySelector('#errCopy').onclick = async () => { try{ await navigator.clipboard.writeText(errDetail); toast('Détail copié : collez-le au MJ'); }catch(e){ toast('Copie impossible'); } };
 }
 
 /* ---------- fusion des mises à jour du MJ ---------- */
@@ -406,14 +538,14 @@ function mergeKeyed(arr, items, key){
 /* ---------- décodage des liens ---------- */
 function b64ToBytes(s){ s = s.replace(/-/g,'+').replace(/_/g,'/'); while(s.length % 4) s += '='; const b = atob(s); return Uint8Array.from(b, c => c.charCodeAt(0)); }
 function bytesToB64(u){ let s = ''; u.forEach(c => s += String.fromCharCode(c)); return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); }
-async function decodePayload(p){
+async function decodeText(p){
   if(p.startsWith('z:')){
     const st = new Blob([b64ToBytes(p.slice(2))]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
-    return JSON.parse(await new Response(st).text());
+    return await new Response(st).text();
   }
-  if(p.startsWith('b64:')) return JSON.parse(new TextDecoder().decode(b64ToBytes(p.slice(4))));
-  let t = p; try{ t = decodeURIComponent(p); }catch(e){}
-  return JSON.parse(t);
+  if(p.startsWith('b64:')) return new TextDecoder().decode(b64ToBytes(p.slice(4)));
+  try{ return decodeURIComponent(p); }catch(e){}
+  try{ return decodeURIComponent(p.replace(/%[0-9a-f]?$/i, '')); }catch(e){ return p; }
 }
 async function encodeState(){
   const json = JSON.stringify(S);
@@ -429,15 +561,19 @@ async function importFrom(text){
   const m = raw.match(/#(etat|maj)=(.*)$/s);
   if(m){ kind = m[1]; payload = m[2]; }
   else if(/^(etat|maj)=/.test(raw)){ kind = raw.startsWith('maj') ? 'maj' : 'etat'; payload = raw.slice(raw.indexOf('=')+1); }
-  try{
-    const data = await decodePayload(payload.trim());
-    if(kind === 'maj' || data.maj){
-      change(() => { const p = data.maj || data; merge(S, p); S = fix(S); if(S.combat.tour >= S.combat.ordre.length) S.combat.tour = 0; }, '📜 Le MJ a mis à jour la partie');
-    }else{
-      change(() => { S = fix(data); heroSel = 0; }, '📜 Nouvelle partie chargée');
-    }
-    return true;
-  }catch(e){ console.warn(e); toast('⚠️ Lien du MJ illisible'); return false; }
+  const title = kind === 'maj' ? 'Mise à jour impossible' : 'Chargement de la partie impossible';
+  let t;
+  try{ t = (await decodeText(payload.trim())).trim(); }
+  catch(e){ showError(title, ['Le lien n\'a pas pu être décodé (format b64: ou z: abîmé).', errText(e)]); return false; }
+  let data;
+  try{ data = JSON.parse(t); }
+  catch(e){ showError(title, jsonProblem(e, t)); return false; }
+  const errs = validate(data, kind);
+  if(errs.length){ showError(title, errs.length > 12 ? errs.slice(0, 12).concat([`… et ${errs.length - 12} autre(s) problème(s).`]) : errs); return false; }
+  if(kind === 'maj' || data.maj){
+    return change(() => { const p = data.maj || data; merge(S, p); S = fix(S); if(S.combat.tour >= S.combat.ordre.length) S.combat.tour = 0; }, '📜 Le MJ a mis à jour la partie', title);
+  }
+  return change(() => { S = fix(data); }, '📜 Nouvelle partie chargée', title);
 }
 async function readHash(){
   const hs = location.hash;
@@ -686,6 +822,9 @@ function renderRegles(){
 }
 
 function render(){
+  try{ draw(); }catch(e){ console.error(e); showError('Affichage impossible', [errText(e)]); }
+}
+function draw(){
   const app = document.getElementById('app');
   const y = window.scrollY;
   app.innerHTML = renderSky() + renderGroupe()
@@ -780,6 +919,8 @@ let ty0 = null; const trEl = document.getElementById('tray');
 trEl.addEventListener('touchstart', e => { ty0 = trEl.scrollTop <= 0 ? e.touches[0].clientY : null; }, {passive:true});
 trEl.addEventListener('touchend', e => { if(ty0 != null && e.changedTouches[0].clientY - ty0 > 80) closeTray(); ty0 = null; });
 window.addEventListener('hashchange', readHash);
+window.addEventListener('error', e => showError('Erreur sur la page', [errText(e.error || e.message)]));
+window.addEventListener('unhandledrejection', e => showError('Erreur sur la page', [errText(e.reason)]));
 load();
 render();
 readHash();
