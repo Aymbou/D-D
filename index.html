@@ -753,6 +753,35 @@ function renderSky(){
   </header>`;
 }
 
+/* ---------- mémoire vide : aider à retrouver la partie ---------- */
+function memoireOk(){ try{ localStorage.setItem('chroniques.test', '1'); localStorage.removeItem('chroniques.test'); return true; }catch(e){ return false; } }
+function versionPrecedente(){
+  try{ const d = JSON.parse(localStorage.getItem(KEY_PREV)); if(d && Array.isArray(d.heros) && d.heros.length && !validate(d, 'etat').length) return d; }catch(e){}
+  return null;
+}
+function renderRecup(){
+  const prev = versionPrecedente();
+  return `<div style="text-align:left;margin-top:18px">
+    <div class="label">Vous aviez déjà une partie ?</div>
+    <p style="font-size:14px;margin:0 0 8px">Ce navigateur ne l'a plus en mémoire. Elle n'est enregistrée que sur chaque téléphone, pas sur le site. Pour la retrouver :</p>
+    ${memoireOk() ? '' : `<p style="font-size:14px;margin:0 0 8px"><b>La mémoire de ce navigateur est bloquée</b> (navigation privée ?) : la partie sera perdue à la fermeture de l'onglet.</p>`}
+    ${prev ? `<div class="btnrow"><button class="btn" id="recPrev">Restaurer la dernière version (${h(prev.titre || 'partie')}, ${prev.heros.length} héros)</button></div>` : ''}
+    ${SY.salle ? `<div class="btnrow"><button class="btn" id="recSync">Récupérer depuis la table partagée</button></div>
+      <p style="font-size:13px;color:var(--ink2);margin:4px 0 0">Possible si un téléphone de la table l'a modifiée dans les 12 dernières heures.</p>` : ''}
+    <div class="label">Lien de sauvegarde ou d'invitation</div>
+    <textarea class="field" id="recTxt" placeholder="Collez ici un lien #etat=… ou un lien d'invitation #salle=…"></textarea>
+    <div class="btnrow"><button class="btn" id="recBtn">Charger</button></div>
+  </div>`;
+}
+async function recCharger(){
+  const v = String(($('recTxt')||{}).value || '').trim();
+  if(!v) return toast('Collez d\'abord un lien');
+  const m = v.match(/#salle=([a-z0-9]+)/i);
+  if(m) return syncRejoindre(m[1]);
+  if(await importFrom(v)) window.scrollTo({top:0, behavior:'smooth'});
+}
+function recSync(){ SY.v = 0; syncSave(); toast('Recherche sur la table partagée…'); syncConnecter(); }
+
 function renderGroupe(){
   const st = norm(S.statut), ribCls = st.includes('pause')?'pause':st.includes('combat')?'combat':st.includes('repos')?'repos':'explo';
   const empty = !S.heros.length && !S.scene.titre && !S.scene.texte;
@@ -764,6 +793,7 @@ function renderGroupe(){
       <h2 class="scene">En attente du maître du jeu</h2>
       <p>Lancez la partie avec Claude en vocal. Le MJ vous donnera un <b>lien de départ</b> : touchez-le, et la table se remplira toute seule.</p>
       <button class="btn-gold small" id="demoBtn">Voir un exemple</button>
+      ${renderRecup()}
     </div>`;
   }else{
     main = `
@@ -949,6 +979,9 @@ function bind(){
   document.querySelectorAll('[data-hero]').forEach(b => b.onclick = () => pick(b.dataset.hero, true));
   on('undoBtn', undo);
   on('shareBtn', share);
+  on('recPrev', () => { const d = versionPrecedente(); if(d) change(() => { S = fix(d); }, 'Dernière version restaurée'); });
+  on('recSync', recSync);
+  on('recBtn', recCharger);
   on('syncNew', syncCreer);
   on('syncInv', syncInviter);
   on('syncQuit', syncQuitter);
@@ -1148,6 +1181,7 @@ window.addEventListener('hashchange', readHash);
 window.addEventListener('error', e => showError('Erreur sur la page', [errText(e.error || e.message)]));
 window.addEventListener('unhandledrejection', e => showError('Erreur sur la page', [errText(e.reason)]));
 load();
+if(!S.heros.length && SY.salle){ SY.v = 0; syncSave(); }
 render();
 readHash();
 syncConnecter();
