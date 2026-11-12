@@ -297,6 +297,22 @@ nav.tabs button.on svg{filter:drop-shadow(0 0 4.3px rgba(217,178,95,.6))}
 .errbox pre{margin:4px 0 8px;padding:6px 8px;border-radius:5px;background:rgba(120,90,55,.15);font-size:12px;white-space:pre-wrap;word-break:break-all}
 .errbox .btnrow{margin-top:6px}
 .errbox .btn{height:38px;font-size:12px}
+.tag.spell{display:inline-flex;align-items:center;gap:6px;color:var(--ink);cursor:pointer;font-size:14px}
+.tag.spell .nv{font-family:var(--display);font-size:10px;font-weight:700;letter-spacing:.06em;padding:1px 5px;border-radius:4px;background:#5a3fa8;color:#f3ecff}
+.tag.spell .info{display:inline-grid;place-items:center;width:15px;height:15px;border-radius:50%;border:1.2px solid var(--ink3);font-family:var(--display);font-size:10px;font-weight:700;color:var(--ink2)}
+.spell-bg{position:fixed;inset:0;z-index:44;background:rgba(5,3,2,.55);opacity:0;pointer-events:none;transition:.2s}
+.spell-bg.open{opacity:1;pointer-events:auto}
+.spellpop{position:fixed;left:50%;top:50%;z-index:45;width:min(92vw,440px);max-height:80vh;overflow-y:auto;padding:18px 18px 16px;border-radius:12px;border:1.5px solid var(--gold3);border-top:6px solid #5a3fa8;background:var(--noise),radial-gradient(ellipse at 50% 0%,#f4ead2,var(--parch) 60%,var(--parch2));background-size:144px,auto;color:var(--ink);box-shadow:0 18px 40px rgba(0,0,0,.6);transform:translate(-50%,-46%) scale(.96);opacity:0;pointer-events:none;transition:.2s}
+.spellpop.open{transform:translate(-50%,-50%) scale(1);opacity:1;pointer-events:auto}
+.spellpop .trayx{top:10px;right:10px;width:36px;height:36px}
+.spellpop .kick{font-family:var(--display);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink3)}
+.spellpop h3{margin:2px 40px 2px 0;font-family:var(--display);font-weight:900;font-size:24px;line-height:1.1;color:#3b2a7a}
+.spellpop .sub{margin:0 0 10px;font-style:italic;color:var(--ink2);font-size:15px}
+.spellpop dl{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;margin:0 0 10px;padding:10px 12px;border-radius:8px;background:rgba(255,250,236,.5);border:1px solid rgba(120,90,55,.3)}
+.spellpop dt{font-family:var(--display);font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);padding-top:2px}
+.spellpop dd{margin:0;font-size:15px}
+.spellpop .desc{margin:0;font-size:15.5px;line-height:1.5;white-space:pre-line}
+.spellpop .desc.muted{font-style:italic;color:var(--ink2)}
 .toast{position:fixed;left:50%;top:calc(11.5px + env(safe-area-inset-top));z-index:60;transform:translate(-50%,-140%);max-width:67.5vw;padding:10.1px 15.8px;border-radius:8.6px;border:1.5px solid var(--gold);background:#1b140e;color:var(--cream);font-size:13px;box-shadow:0 7.2px 21.6px rgba(0,0,0,.6);transition:transform .3s}
 .toast.show{transform:translate(-50%,0)}
 @media (max-width:302.4px){body{font-size:12.2px}.parch>.in{padding:18.7px 13px}.cardtools{right:13px}.scenetext,.hint{font-size:16px}.hint svg{width:37.4px;height:37.4px}.med{width:60.5px}.med .av{width:50.4px;height:50.4px}nav.tabs button{font-size:7.6px}nav.tabs svg{width:19.4px;height:19.4px}}
@@ -307,6 +323,8 @@ nav.tabs button.on svg{filter:drop-shadow(0 0 4.3px rgba(217,178,95,.6))}
 <button class="fab" id="fab" aria-label="Lancer les dés"></button>
 <div class="tray-bg" id="trayBg"></div>
 <div class="tray" id="tray" role="dialog" aria-label="Lancer de dés"></div>
+<div class="spell-bg" id="spellBg"></div>
+<div class="spellpop" id="spellPop" role="dialog" aria-label="Détail du sort"></div>
 <div class="toast" id="toast"></div>
 <div class="errbox" id="errbox" role="alert" aria-live="assertive"></div>
 
@@ -413,6 +431,7 @@ function fix(s){
   o.lieux = o.lieux.map(l => typeof l === 'string' ? {nom:l} : l);
   o.quetes = o.quetes.map(q => typeof q === 'string' ? {titre:q} : q);
   o.journal = o.journal.map(j => typeof j === 'string' ? {texte:j} : j);
+  o.heros.forEach(x => { if(isObj(x) && Array.isArray(x.sorts)) x.sorts = x.sorts.map(sp => (typeof sp === 'string' || typeof sp === 'number') ? {nom:String(sp)} : sp); });
   // Montée de niveau automatique quand l'XP atteint le seuil (jamais de descente)
   o.heros.forEach(x => {
     if(!isObj(x) || x.xp == null || !isFinite(Number(x.xp))) return;
@@ -499,7 +518,9 @@ function validate(d, kind){
           if(c != null){ if(!isObj(c)) E.push(`${r} › carac : doit être un objet { "FOR": 10, … }`); else Object.entries(c).forEach(([ck, cv]) => num(cv, `${r} › carac.${ck}`)); }
           list(o.attaques, r + ' › attaques', (a, s2) => named(a, s2, 'nom', {texteSeulInterdit:true, check:(aa, s3) => { num(aa.toucher, s3 + ' › toucher'); txt(aa.degats, s3 + ' › degats'); }}));
           list(o.talents || o.competences, r + ' › talents', (a, s2) => { if(T.str(a)) return; named(a, s2, 'nom', {check:(aa, s3) => num(aa.bonus, s3 + ' › bonus')}); });
-          strList(o.sorts, r + ' › sorts'); strList(o.inventaire, r + ' › inventaire'); strList(o.etats, r + ' › etats');
+          list(o.sorts, r + ' › sorts', (sp, s2) => { if(T.str(sp)) return; named(sp, s2, 'nom', {check:(o2, s3) => {
+            numOrTxt(o2.niveau, s3 + ' › niveau');
+            ['ecole','portee','incantation','duree','composantes','jet','des','effet','description'].forEach(f => txt(o2[f], `${s3} › ${f}`)); }}); }); strList(o.inventaire, r + ' › inventaire'); strList(o.etats, r + ' › etats');
         }}));
         break;
       case 'lieux': list(v, p, (it, q) => { if(T.str(it)) return; named(it, q, 'nom', {check:(o, r) => txt(o.note, r + ' › note')}); }); break;
@@ -538,7 +559,7 @@ function showError(title, lines){
 }
 
 /* ---------- fusion des mises à jour du MJ ---------- */
-const KEYED = {heros:'nom', ennemis:'nom', quetes:'titre', lieux:'nom', pnj:'nom'};
+const KEYED = {heros:'nom', ennemis:'nom', quetes:'titre', lieux:'nom', pnj:'nom', sorts:'nom'};
 const isObj = v => v && typeof v === 'object' && !Array.isArray(v);
 function merge(t, p){
   for(const [k0, v] of Object.entries(p||{})){
@@ -552,9 +573,11 @@ function merge(t, p){
   return t;
 }
 function mergeKeyed(arr, items, key){
-  for(const it of items){
+  for(let it of items){
+    if(typeof it === 'string' || typeof it === 'number') it = {[key]: String(it)};
     if(!isObj(it)) continue;
-    const i = arr.findIndex(x => norm(x[key]) === norm(it[key]));
+    const i = arr.findIndex(x => norm(isObj(x) ? x[key] : x) === norm(it[key]));
+    if(i >= 0 && !isObj(arr[i])) arr[i] = {[key]: String(arr[i])};
     if(it.supprimer){ if(i >= 0) arr.splice(i,1); continue; }
     if(i >= 0) merge(arr[i], it); else arr.push(it);
   }
@@ -788,6 +811,28 @@ function xpInfo(x){
   const pct = haut == null ? 100 : Math.max(0, Math.min(100, (xp - bas) / Math.max(1, haut - bas) * 100));
   return {xp, haut, pct, up: haut != null && xp >= haut};
 }
+function niveauSort(n, court){
+  if(n == null || n === '') return '';
+  const k = parseInt(n);
+  if(k === 0 || /tour/i.test(String(n))) return court ? 'TdM' : 'Tour de magie';
+  return isFinite(k) ? (court ? 'N' + k : 'Sort de niveau ' + k) : String(n);
+}
+function openSpell(i, j){
+  const x = S.heros[i]; if(!x || !x.sorts) return;
+  const sp = x.sorts[j]; const o = typeof sp === 'string' ? {nom:sp} : (sp || {});
+  const sub = [niveauSort(o.niveau), o.ecole].filter(Boolean).join(' · ');
+  const rows = [['Portée', o.portee], ['Incantation', o.incantation], ['Durée', o.duree], ['Composantes', o.composantes], ['Jet', o.jet],
+    ['Dés', [o.des, o.effet].filter(Boolean).join(' · ')]].filter(r => r[1]);
+  const pop = $('spellPop');
+  pop.innerHTML = `<button class="trayx" id="spellX" aria-label="Fermer">${svg('x')}</button>
+    <div class="kick">${h(x.nom)} · Sort</div><h3>${h(o.nom)}</h3>${sub ? `<p class="sub">${h(sub)}</p>` : ''}
+    ${rows.length ? `<dl>${rows.map(r => `<dt>${r[0]}</dt><dd>${h(r[1])}</dd>`).join('')}</dl>` : ''}
+    ${o.description ? `<p class="desc">${h(o.description)}</p>` : ''}
+    ${!rows.length && !o.description ? `<p class="desc muted">Pas encore de détail pour ce sort. Le MJ peut l'ajouter dans sa prochaine mise à jour.</p>` : ''}`;
+  $('spellBg').classList.add('open'); pop.classList.add('open');
+  $('spellX').onclick = closeSpell;
+}
+function closeSpell(){ $('spellBg').classList.remove('open'); $('spellPop').classList.remove('open'); }
 function sheetHTML(x, i){
   const col = heroColor(x) || PALETTE[i % PALETTE.length];
   const pv = Number(x.pv)||0, max = Number(x.pvMax)||1, pct = Math.max(0, Math.min(100, pv/max*100));
@@ -808,7 +853,8 @@ function sheetHTML(x, i){
         ${CK.some(k => car[k]!=null) ? `<div class="label">Caractéristiques</div><div class="stats6">${CK.map(k => car[k]==null ? '' : `<button class="stat" data-check="${i}:${k}"><small>${k}</small><b>${h(car[k])}</b><span>${sgn(mod(car[k]))}</span></button>`).join('')}</div>` : ''}
         ${atks.length ? `<div class="label">Attaques</div><div class="chipsrow">${atks.map((a,j) => `<button class="rollchip" data-atk="${i}:${j}">${D20()}${h(a.nom)} <em>${a.toucher!=null?sgn(Number(a.toucher))+' · ':''}${h(a.degats||'')}</em></button>`).join('')}</div>` : ''}
         ${tal.length ? `<div class="label">Talents</div><div class="chipsrow">${tal.map((a,j) => `<button class="rollchip" data-tal="${i}:${j}">${D20()}${h(typeof a==='string'?a:a.nom)} <em>${typeof a==='object' && a.bonus!=null ? sgn(Number(a.bonus)) : ''}</em></button>`).join('')}</div>` : ''}
-        ${x.sorts && x.sorts.length ? `<div class="label">Sorts</div><div class="tags">${x.sorts.map(s => `<span class="tag">${h(typeof s==='string'?s:s.nom)}</span>`).join('')}</div>` : ''}
+        ${x.sorts && x.sorts.length ? `<div class="label">Sorts <em>· touchez pour le détail</em></div><div class="tags">${x.sorts.map((sp,j) => { const o = typeof sp === 'string' ? {nom:sp} : sp; const nv = niveauSort(o.niveau, true);
+          return `<button class="tag spell" data-spell="${i}:${j}">${nv ? `<span class="nv">${h(nv)}</span>` : ''}${h(o.nom)}<span class="info">i</span></button>`; }).join('')}</div>` : ''}
         ${inv.length ? `<div class="label">Besace</div><p class="invline">${inv.map(o => `<span>${h(typeof o==='string'?o:(o.nom + (o.qte>1?` ×${o.qte}`:'')))}</span>`).join('')}</p>` : ''}
         ${x.notes ? `<div class="label">Notes</div><p class="notes">${h(x.notes)}</p>` : ''}
       </div></div></div>`;
@@ -909,6 +955,7 @@ function bind(){
   });
   document.querySelectorAll('[data-delfoe]').forEach(b => b.onclick = ev => { ev.stopPropagation(); const i = +b.dataset.delfoe; change(() => S.ennemis.splice(i,1), 'Ennemi retiré'); });
   const nf = $('newFoe'); if(nf) nf.onkeydown = ev => { if(ev.key === 'Enter' && nf.value.trim()){ const v = nf.value.trim(); change(() => S.ennemis.push({nom:v, etat:'debout'}), 'Ennemi ajouté'); } };
+  document.querySelectorAll('[data-spell]').forEach(b => b.onclick = () => { const [i, j] = b.dataset.spell.split(':'); openSpell(+i, +j); });
   document.querySelectorAll('[data-lvlok]').forEach(b => b.onclick = () => { const i = +b.dataset.lvlok; change(() => { delete S.heros[i].niveauMonte; }); });
   on('restBtn', () => change(() => S.heros.forEach(x => { if(x.pvMax!=null) x.pv = x.pvMax; }), '🌙 La compagnie se repose : PV restaurés'));
   const two = v => v.split(':');
@@ -947,7 +994,7 @@ function DEMO(){ return {
   heros:[
     {nom:'Thorin', classe:'Guerrier nain', niveau:1, xp:180, couleur:'rouge', embleme:'hache', pv:9, pvMax:13, ca:16, initiative:-1, vitesse:'7,5 m', maitrise:2, carac:{FOR:16,DEX:9,CON:15,INT:10,SAG:12,CHA:8}, attaques:[{nom:'Hache d\'armes', toucher:5, degats:'1d8+3'},{nom:'Hachette (lancer)', toucher:5, degats:'1d6+3'}], talents:[{nom:'Athlétisme', bonus:5},{nom:'Intimidation', bonus:1}], inventaire:['Hache d\'armes','Cotte de mailles','Bouclier','2 potions de soin']},
     {nom:'Lyra', classe:'Roublarde elfe', niveau:1, xp:300, couleur:'vert', embleme:'dague', pv:9, pvMax:9, ca:14, initiative:3, vitesse:'9 m', maitrise:2, carac:{FOR:8,DEX:17,CON:12,INT:13,SAG:12,CHA:14}, attaques:[{nom:'Dague', toucher:5, degats:'1d4+3'},{nom:'Arc court', toucher:5, degats:'1d6+3'}], talents:[{nom:'Discrétion', bonus:7},{nom:'Perception', bonus:3}], inventaire:['2 dagues','Arc court et 14 flèches','Outils de voleur','Clé rouillée']},
-    {nom:'Elwen', classe:'Magicienne humaine', niveau:1, xp:75, couleur:'violet', embleme:'etoile', pv:4, pvMax:7, ca:12, initiative:2, maitrise:2, etats:['Concentration'], carac:{FOR:8,DEX:14,CON:13,INT:17,SAG:12,CHA:10}, attaques:[{nom:'Bâton', toucher:2, degats:'1d6'},{nom:'Trait de feu', toucher:5, degats:'1d10'}], talents:[{nom:'Arcanes', bonus:5},{nom:'Histoire', bonus:5}], sorts:['Projectile magique','Bouclier','Sommeil'], inventaire:['Bâton','Grimoire','Sacoche à composantes','Parchemin inconnu']}
+    {nom:'Elwen', classe:'Magicienne humaine', niveau:1, xp:75, couleur:'violet', embleme:'etoile', pv:4, pvMax:7, ca:12, initiative:2, maitrise:2, etats:['Concentration'], carac:{FOR:8,DEX:14,CON:13,INT:17,SAG:12,CHA:10}, attaques:[{nom:'Bâton', toucher:2, degats:'1d6'},{nom:'Trait de feu', toucher:5, degats:'1d10'}], talents:[{nom:'Arcanes', bonus:5},{nom:'Histoire', bonus:5}], sorts:[{nom:'Projectile magique', niveau:1, ecole:'Évocation', portee:'36 m', incantation:'1 action', duree:'Instantanée', composantes:'V, S', jet:'Touche automatiquement', des:'3 × (1d4+1)', effet:'Dégâts de force', description:'Trois fléchettes de force lumineuse frappent une ou plusieurs créatures visibles à portée. Chaque fléchette inflige 1d4+1 dégâts de force.'},{nom:'Bouclier', niveau:1, ecole:'Abjuration', portee:'Personnelle', incantation:'1 réaction', duree:'1 round', description:'Une barrière invisible apparaît : +5 à la CA jusqu\'au début de votre prochain tour, et aucun dégât de Projectile magique.'},'Sommeil'], inventaire:['Bâton','Grimoire','Sacoche à composantes','Parchemin inconnu']}
   ],
   lieux:[{nom:'Route de Valbrume', note:'Embuscade de gobelins repoussée'},{nom:'Valbrume', note:'Le prêtre Aldric confie la quête'},{nom:'Le vieux moulin', note:'Lyra crochète la trappe'},{nom:'La crypte', note:'Combat contre les morts-vivants'}],
   lieuActuel:'La crypte',
@@ -958,6 +1005,8 @@ function DEMO(){ return {
 
 /* ---------- démarrage ---------- */
 document.getElementById('trayBg').onclick = closeTray;
+document.getElementById('spellBg').onclick = closeSpell;
+document.addEventListener('keydown', e => { if(e.key === 'Escape'){ closeSpell(); closeTray(); } });
 document.getElementById('fab').onclick = () => openTray(false);
 let ty0 = null; const trEl = document.getElementById('tray');
 trEl.addEventListener('touchstart', e => { ty0 = trEl.scrollTop <= 0 ? e.touches[0].clientY : null; }, {passive:true});
