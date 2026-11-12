@@ -454,7 +454,7 @@ function change(fn, msg, errTitle){
     return false;
   }
   undoStack.push(before); if(undoStack.length > 40) undoStack.shift();
-  save(); render();
+  save(); render(); syncChanged();
   if(LEVELUPS.length) toast(LEVELUPS.join(' · ')); else if(msg) toast(msg);
   return true;
 }
@@ -625,8 +625,15 @@ async function importFrom(text){
 }
 async function readHash(){
   const hs = location.hash;
+  if(/^#salle=/.test(hs)){
+    syncRejoindre(hs.slice(7));
+    try{ history.replaceState(null, '', location.pathname + location.search); }catch(e){}
+    return;
+  }
   if(/^#(etat|maj)=/.test(hs)){
-    await importFrom(hs);
+    const cle = lienCle(hs);
+    if(SY.salle && SY.vus.includes(cle)) toast('✔️ Déjà reçu par la table partagée');
+    else if(await importFrom(hs)){ lienVu(cle); if(SY.salle){ clearTimeout(syncTimer); syncPublish(); } }
     try{ history.replaceState(null, '', location.pathname + location.search); }catch(e){}
   }
 }
@@ -895,11 +902,12 @@ function renderRegles(){
     <div class="label">Charger un lien du MJ</div>
     <textarea class="field" id="impTxt" placeholder="Collez ici un lien du MJ ou un bloc JSON"></textarea>
     <div class="btnrow"><button class="btn" id="impBtn">Charger</button><button class="btn" id="expBtn">Copier la sauvegarde</button><button class="btn danger" id="resetBtn">Nouvelle partie</button></div>
+    ${renderSync()}
     <div class="label">Comment jouer</div>
     <div class="rules">
       <ul>
         <li>On joue <b>en vocal</b> avec Claude, qui est le maître du jeu (règles D&D 5e).</li>
-        <li>Quand la situation change, le MJ envoie un <b>lien</b> : touchez-le, la table se met à jour.</li>
+        <li>Quand la situation change, le MJ envoie un <b>lien</b> : touchez-le, la table se met à jour. Avec une <b>table partagée</b>, un seul joueur touche le lien et tous les téléphones suivent.</li>
         <li>« <b>Pause</b> » : le MJ se tait (il peut seulement dire « Mais encore ? »). « <b>Continue MJ</b> » : il reprend là où il en était.</li>
         <li>Combat : ordre de tour fixe décidé au début. À son tour, on peut se déplacer, faire une action, une action bonus.</li>
         <li>« Copier la sauvegarde » donne un lien à recoller dans une nouvelle conversation pour reprendre la partie.</li>
@@ -941,6 +949,9 @@ function bind(){
   document.querySelectorAll('[data-hero]').forEach(b => b.onclick = () => pick(b.dataset.hero, true));
   on('undoBtn', undo);
   on('shareBtn', share);
+  on('syncNew', syncCreer);
+  on('syncInv', syncInviter);
+  on('syncQuit', syncQuitter);
   on('demoBtn', () => change(() => { S = fix(DEMO()); heroSel = 0; }, 'Exemple chargé'));
   on('editScene', () => {
     if(editScene){ const t = $('sceneT'), x = $('sceneX'); const nt = t ? t.innerText.trim() : S.scene.titre, nx = x ? x.innerText.trim() : S.scene.texte;
@@ -1003,6 +1014,128 @@ function DEMO(){ return {
   monde:{pnj:[{nom:'Aldric', role:'Prêtre de Valbrume', note:'Inquiet, il cache quelque chose sur l\'amulette.', embleme:'croix', couleur:'or'},{nom:'Mère Hulda', role:'Aubergiste', note:'Connaît toutes les rumeurs du village.', embleme:'feuille', couleur:'brun'}], notes:'Le brassard rouge des gobelins semble être un signe de ralliement.'}
 };}
 
+/* ---------- table partagée (synchronisation entre téléphones) ----------
+   Chaque téléphone abonné à la même « salle » reçoit l'état complet de la partie
+   dès qu'un joueur la modifie (lien du MJ, PV, tour suivant…).
+   Relais : ntfy.sh (gratuit, sans compte). Messages limités à 4 096 octets :
+   l'état est compressé puis découpé en morceaux. Le serveur garde les messages 12 h,
+   ce qui permet à un téléphone qui rejoint la salle de récupérer le dernier état. */
+const SYNC_SRV = 'https://ntfy.sh', SYNC_PART = 3200, KEY_SYNC = 'chroniques.salle.v1';
+const SYNC_ME = Math.random().toString(36).slice(2, 10);
+let SY = {salle:'', v:0, vus:[]};
+try{ const o = JSON.parse(localStorage.getItem(KEY_SYNC)); if(o) SY = Object.assign(SY, o); }catch(e){}
+let syncApplying = false, syncTimer = null, syncES = null, syncEtat = 'off', syncParts = {};
+const syncSave = () => { try{ localStorage.setItem(KEY_SYNC, JSON.stringify(SY)); }catch(e){} };
+const syncTopic = () => 'chroniques-' + SY.salle;
+function lienCle(p){ let x = 2166136261; for(let i = 0; i < p.length; i++){ x ^= p.charCodeAt(i); x = Math.imul(x, 16777619); } return (x >>> 0).toString(36); }
+function lienVu(k){ if(!SY.vus.includes(k)){ SY.vus.push(k); SY.vus = SY.vus.slice(-60); syncSave(); } }
+async function syncPack(obj){
+  const json = JSON.stringify(obj);
+  try{
+    if(typeof CompressionStream === 'undefined') throw 0;
+    const st = new Blob([json]).stream().pipeThrough(new CompressionStream('deflate-raw'));
+    return 'z:' + bytesToB64(new Uint8Array(await new Response(st).arrayBuffer()));
+  }catch(e){ return 'b64:' + bytesToB64(new TextEncoder().encode(json)); }
+}
+function syncChanged(){
+  if(syncApplying || !SY.salle) return;
+  SY.v++; syncSave();
+  clearTimeout(syncTimer); syncTimer = setTimeout(syncPublish, 1200);
+}
+async function syncPublish(){
+  if(!SY.salle) return;
+  try{
+    const data = await syncPack({v:SY.v, de:SYNC_ME, s:S, vus:SY.vus});
+    const id = SYNC_ME + '-' + SY.v, n = Math.ceil(data.length / SYNC_PART);
+    for(let i = 0; i < n; i++){
+      const r = await fetch(SYNC_SRV + '/' + syncTopic(), {method:'POST', body:JSON.stringify({k:'chroniques', id, i, n, d:data.slice(i*SYNC_PART, (i+1)*SYNC_PART)})});
+      if(!r.ok) throw new Error('Le relais a répondu ' + r.status + (r.status === 429 ? ' (trop de messages, réessayez plus tard)' : ''));
+    }
+    syncEtat = 'ok';
+  }catch(e){ syncEtat = 'erreur'; toast('⚠️ Table partagée : envoi impossible'); console.error(e); }
+  majStatutSync();
+}
+async function syncRecu(m){
+  if(!m || m.k !== 'chroniques' || !m.id || typeof m.d !== 'string') return null;
+  const b = syncParts[m.id] = syncParts[m.id] || {n:m.n, p:{}};
+  b.p[m.i] = m.d;
+  if(Object.keys(b.p).length < b.n) return null;
+  delete syncParts[m.id];
+  let txt = '';
+  for(let i = 0; i < b.n; i++) txt += b.p[i];
+  try{ return JSON.parse(await decodeText(txt)); }catch(e){ console.error(e); return null; }
+}
+function syncAppliquer(o, discret){
+  if(!o || o.de === SYNC_ME || !o.s) return;
+  (o.vus || []).forEach(lienVu);
+  if(!(o.v > SY.v || (o.v === SY.v && o.de > SYNC_ME))) return;
+  if(validate(o.s, 'etat').length) return;
+  SY.v = o.v; syncSave();
+  syncApplying = true;
+  try{ change(() => { S = fix(o.s); }, discret ? '' : '🔄 Table mise à jour'); }
+  finally{ syncApplying = false; }
+}
+async function syncRattraper(){
+  if(!SY.salle) return;
+  try{
+    const r = await fetch(SYNC_SRV + '/' + syncTopic() + '/json?poll=1&since=12h');
+    const lignes = (await r.text()).split('\n').filter(Boolean);
+    let best = null;
+    for(const l of lignes){
+      let ev; try{ ev = JSON.parse(l); }catch(e){ continue; }
+      if(ev.event !== 'message') continue;
+      let m; try{ m = JSON.parse(ev.message); }catch(e){ continue; }
+      const o = await syncRecu(m);
+      if(o && o.de !== SYNC_ME && (!best || o.v > best.v)) best = o;
+    }
+    syncParts = {};
+    if(best) syncAppliquer(best, false);
+  }catch(e){ console.error(e); }
+}
+function syncConnecter(){
+  if(syncES){ syncES.close(); syncES = null; }
+  if(!SY.salle){ syncEtat = 'off'; majStatutSync(); return; }
+  syncEtat = 'connexion'; majStatutSync();
+  syncES = new EventSource(SYNC_SRV + '/' + syncTopic() + '/sse');
+  syncES.onopen = () => { syncEtat = 'ok'; majStatutSync(); };
+  syncES.onerror = () => { syncEtat = 'connexion'; majStatutSync(); };
+  syncES.onmessage = async e => {
+    let ev, m; try{ ev = JSON.parse(e.data); m = JSON.parse(ev.message); }catch(x){ return; }
+    const o = await syncRecu(m); if(o) syncAppliquer(o, false);
+  };
+  syncRattraper();
+}
+function syncRejoindre(code){
+  code = String(code||'').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+  if(code.length < 8) return toast('Code de table invalide');
+  SY.salle = code; SY.v = 0; syncSave(); syncConnecter(); render();
+  toast('🔗 Table partagée rejointe');
+}
+function syncCreer(){
+  const a = new Uint8Array(12); crypto.getRandomValues(a);
+  SY.salle = Array.from(a, x => 'abcdefghijkmnpqrstuvwxyz23456789'[x % 32]).join('');
+  syncSave(); syncConnecter(); syncChanged(); render(); syncInviter();
+}
+function syncQuitter(){ SY.salle = ''; syncSave(); syncConnecter(); render(); toast('Table partagée quittée'); }
+async function syncInviter(){
+  const url = location.origin + location.pathname + '#salle=' + SY.salle;
+  try{ if(navigator.share){ await navigator.share({title:'Table partagée', text:'Rejoignez la table de jeu', url}); return; } }catch(e){ if(e && e.name === 'AbortError') return; }
+  try{ await navigator.clipboard.writeText(url); toast('🔗 Lien d\'invitation copié'); }
+  catch(e){ const t = $('impTxt'); if(t){ t.value = url; t.select(); toast('Lien d\'invitation affiché ci-dessus'); } }
+}
+const SYNC_TXT = {off:'Désactivée : cette table ne se met à jour que sur ce téléphone.', connexion:'Connexion au relais…', ok:'Connectée : les changements arrivent sur tous les téléphones de la table.', erreur:'Dernier envoi en échec. Vérifiez la connexion internet.'};
+function majStatutSync(){ const e = $('syncStatut'); if(e) e.textContent = SYNC_TXT[syncEtat] || ''; }
+function renderSync(){
+  return `<div class="label">Table partagée</div>
+    <p style="font-size:14px;margin:0 0 6px" id="syncStatut">${SYNC_TXT[syncEtat]}</p>
+    ${SY.salle
+      ? `<p style="font-size:13px;color:var(--ink2);margin:0">Code : <code>${h(SY.salle)}</code></p>
+         <div class="btnrow"><button class="btn" id="syncInv">Inviter un joueur</button><button class="btn danger" id="syncQuit">Quitter</button></div>`
+      : `<div class="btnrow"><button class="btn" id="syncNew">Créer une table partagée</button></div>
+         <p style="font-size:13px;color:var(--ink2);margin:6px 0 0">Un seul joueur la crée, puis envoie le lien d'invitation aux autres.</p>`}`;
+}
+document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'visible' && SY.salle){ if(!syncES || syncES.readyState === 2) syncConnecter(); else syncRattraper(); } });
+
 /* ---------- démarrage ---------- */
 document.getElementById('trayBg').onclick = closeTray;
 document.getElementById('spellBg').onclick = closeSpell;
@@ -1017,6 +1150,7 @@ window.addEventListener('unhandledrejection', e => showError('Erreur sur la page
 load();
 render();
 readHash();
+syncConnecter();
 </script>
 </body>
 </html>
