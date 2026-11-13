@@ -4,7 +4,7 @@
    - Icônes et manifeste : depuis la mémoire, mis à jour en arrière-plan.
    - Polices Google : depuis la mémoire si possible.
    - La table partagée (ntfy.sh) et tout le reste : jamais mis en mémoire. */
-const CACHE = 'chroniques-v1';
+const CACHE = 'chroniques-v2';
 const BASE = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
@@ -21,7 +21,8 @@ self.addEventListener('fetch', e => {
   if(r.method !== 'GET') return;
   // La page : réseau d'abord (5 s max), sinon la copie enregistrée
   if(r.mode === 'navigate' || (u.origin === location.origin && /\/(index\.html)?$/.test(u.pathname))){
-    e.respondWith(avecDelai(fetch(r), 5000).then(rep => {
+    // cache:'no-cache' : on revérifie toujours auprès du serveur (sinon le navigateur peut resservir une vieille copie)
+    e.respondWith(avecDelai(fetch(u.href, {cache:'no-cache', credentials:'same-origin'}), 5000).then(rep => {
       if(rep.ok){ const c = rep.clone(); caches.open(CACHE).then(k => k.put('./index.html', c)); }
       return rep;
     }).catch(() => caches.match('./index.html').then(m => m || caches.match('./'))));
