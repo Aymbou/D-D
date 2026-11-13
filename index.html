@@ -7,6 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0d0a07">
 <title>Chroniques – Table de jeu</title>
+<meta name="version" content="1.9.0">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap" rel="stylesheet">
@@ -374,6 +375,19 @@ span.pip{display:inline-block;width:20px;height:20px}
 .av.pt{overflow:hidden}
 .av.pt svg.portrait{width:100%;height:100%;display:block}
 .sheet .head .av.pt{width:92px;height:92px}
+button.bar.hpbar{display:block;width:100%;border:0;cursor:pointer;-webkit-appearance:none;appearance:none;font:inherit;-webkit-tap-highlight-color:transparent}
+button.bar.hpbar:active{transform:scale(.99)}
+.hpwrap{display:grid;grid-template-rows:0fr;opacity:0;transform:translateY(-6px);transition:grid-template-rows .2s ease,opacity .18s ease,transform .2s ease;margin-top:-6px}
+.hpwrap.open{grid-template-rows:1fr;opacity:1;transform:none;margin-top:0}
+.hpwrap .hpin{min-height:0;overflow:hidden}
+.hpwrap:not(.open) .hpin{visibility:hidden;transition:visibility 0s .2s}
+.hpctl{display:flex;flex-direction:column;align-items:stretch;gap:8px;padding:0 0 2px}
+.hpctl .r1{display:flex;align-items:center;gap:7.2px}
+.hpctl .r1 input{flex:1;width:auto;min-width:0}
+.hpctl .r2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.hpctl .r2 .act{width:100%}
+@media (prefers-reduced-motion:reduce){.hpwrap{transition:none}}
+.version{margin:18px 0 0;text-align:center;font-family:var(--display);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink2)}
 </style>
 </head>
 <body>
@@ -396,6 +410,12 @@ span.pip{display:inline-block;width:20px;height:20px}
      #maj=<JSON>    met à jour une partie de l'état
    (JSON brut encodé pour URL, ou b64:<base64url>, ou z:<deflate-raw base64url>)
    ========================================================= */
+/* Version du site : MAJEUR.MINEUR.CORRECTIF
+   - MINEUR : +1 à chaque nouvelle fonction (en pratique, chaque demande de fusion) ;
+   - CORRECTIF : +1 pour une simple correction ;
+   - MAJEUR : changement qui casse les anciens liens ou sauvegardes.
+   Penser à changer aussi <meta name="version"> en haut du fichier. */
+const VERSION = '1.9.0', VERSION_DATE = '13/11/2026';
 const KEY = 'chroniques.etat.v1', KEY_OPT = 'chroniques.options.v1';
 const TABS = [['groupe','Groupe'],['carte','Carte'],['quetes','Quêtes'],['recit','Récit'],['monde','Monde'],['regles','Règles']];
 
@@ -1025,6 +1045,8 @@ function avatar(x, i, cls=''){
 }
 const flashOn = (k, nom) => !!(FLASH && Date.now() < FLASH.until && FLASH[k] && FLASH[k][norm(nom)] != null);
 const fl = (k, nom) => flashOn(k, nom) ? 'flash' : '';
+const HP_OUVERT = new Set(); // fiches dont les commandes de PV sont dépliées (par nom)
+const hpOuvert = x => HP_OUVERT.has(norm(x && x.nom));
 const estMoi = x => !!(OPT.moi && x && norm(OPT.moi) === norm(x.nom));
 function findHero(nom){ const i = S.heros.findIndex(x => norm(x.nom) === norm(nom)); return i >= 0 ? [S.heros[i], i] : [null,-1]; }
 
@@ -1213,9 +1235,12 @@ function sheetHTML(x, i){
       <div class="body">
         ${(() => { const X = xpInfo(x); return X ? `${x.niveauMonte ? `<button class="lvlbadge" data-lvlok="${i}" aria-label="Masquer">▲ Niveau supérieur ! Niveau ${h(x.niveau)} <span>×</span></button>` : ''}<div class="xprow"><div class="label">Expérience</div><div class="xpnum">${X.xp}${X.haut != null ? `<small> / ${X.haut} XP</small>` : '<small> XP · max</small>'}</div></div>
         <div class="xpbar ${X.up ? 'up' : ''}"><i style="width:${X.pct}%"></i></div>` : ''; })()}
-        <div class="hprow"><div class="label" style="margin:0">Points de vie</div><div class="hpnum ${dpv<0?'flash-dn':dpv>0?'flash-up':''}">${pv}<small> / ${max}</small></div></div>
-        <div class="bar"><i class="${pct<=25?'low':pct<=50?'mid':''}" style="width:${pct}%"></i></div>
-        <div class="hpctl"><button class="ring" data-hp="${i}:-1" aria-label="Moins un">−</button><button class="ring" data-hp="${i}:1" aria-label="Plus un">+</button><span class="sep"></span><input id="hpNb-${i}" type="number" inputmode="numeric" placeholder="Nb"><button class="act hurt" data-hurt="${i}">Blesser</button><button class="act heal" data-heal="${i}">Soigner</button></div>
+        <div class="hprow"><div class="label" style="margin:0">Points de vie${hpOuvert(x) ? '' : ' <em>· touchez la barre</em>'}</div><div class="hpnum ${dpv<0?'flash-dn':dpv>0?'flash-up':''}">${pv}<small> / ${max}</small></div></div>
+        <button class="bar hpbar" data-hptoggle="${i}" aria-expanded="${hpOuvert(x)}" aria-controls="hpw-${i}" aria-label="Afficher les commandes de points de vie"><i class="${pct<=25?'low':pct<=50?'mid':''}" style="width:${pct}%"></i></button>
+        <div class="hpwrap ${hpOuvert(x)?'open':''}" id="hpw-${i}"><div class="hpin"><div class="hpctl">
+          <div class="r1"><button class="ring" data-hp="${i}:-1" aria-label="Moins un">−</button><button class="ring" data-hp="${i}:1" aria-label="Plus un">+</button><span class="sep"></span><input id="hpNb-${i}" type="number" inputmode="numeric" placeholder="Nombre de PV"></div>
+          <div class="r2"><button class="act hurt" data-hurt="${i}">Blesser</button><button class="act heal" data-heal="${i}">Soigner</button></div>
+        </div></div></div>
         ${kv.length ? `<div class="kv" style="margin-top:12px">${kv.map(([k,v]) => `<div><small>${k}</small><b>${h(v)}</b></div>`).join('')}</div>` : ''}
         ${etats.length ? `<div class="tags" style="margin-top:10px">${etats.map((e,j) => { const t = typeof e === 'string' ? e : (e && e.nom) || '';
           return etatSRD(e) ? `<button class="tag bad etat" data-etat="${i}:${j}">${h(t)}<span class="info">i</span></button>` : `<span class="tag bad">${h(t)}</span>`; }).join('')}</div>` : ''}
@@ -1323,7 +1348,8 @@ function renderRegles(){
         <li>« Copier la sauvegarde » donne un lien à recoller dans une nouvelle conversation pour reprendre la partie.</li>
       </ul>
       <p style="font-size:16px;color:var(--ink2)">Format des liens : <code>#etat={…}</code> remplace toute la partie, <code>#maj={…}</code> modifie seulement ce qui est indiqué (héros, ennemis, quêtes, lieux et ressources sont retrouvés par leur nom ; portrait dessiné d'après la race et la classe trouvées dans <code>classe</code> (ou les champs <code>race</code> et <code>genre</code> : <code>"f"</code> ou <code>"m"</code> ; <code>"portrait":false</code> garde l'emblème) ; ressource d'un héros : <code>{"nom":"Rage","max":2,"reste":1,"repos":"long","court":1}</code>, où <code>repos</code> vaut <code>court</code> ou <code>long</code> et <code>court</code> est le nombre d'utilisations rendues par un repos court ; <code>"journal+":[…]</code> ajoute une entrée ; <code>"supprimer":true</code> retire un élément).</p>
-    </div>`);
+    </div>
+    <p class="version">Chroniques · version ${VERSION} du ${VERSION_DATE}</p>`);
 }
 
 function render(){
@@ -1478,6 +1504,10 @@ function bind(){
     if(norm(r.repos) === 'court') r.reste = r.max; else if(Number(r.court) > 0) r.reste = Math.min(r.max, (Number(r.reste)||0) + Number(r.court)); })),
     '☕ Repos court : ressources récupérées (les dés de vie se lancent à la main)'));
   const two = v => v.split(':');
+  document.querySelectorAll('[data-hptoggle]').forEach(b => b.onclick = () => { const i = +b.dataset.hptoggle, x = S.heros[i]; if(!x) return;
+    const k = norm(x.nom), ouvrir = !HP_OUVERT.has(k); if(ouvrir) HP_OUVERT.add(k); else HP_OUVERT.delete(k);
+    const w = $('hpw-' + i); if(w) w.classList.toggle('open', ouvrir); b.setAttribute('aria-expanded', ouvrir);
+    const em = b.closest('.body').querySelector('.hprow .label em'); if(em) em.hidden = ouvrir; });
   document.querySelectorAll('[data-res]').forEach(b => b.onclick = () => { const [i, k, p] = b.dataset.res.split(':').map(Number);
     change(() => { const r = S.heros[i].ressources[k]; r.reste = p < r.reste ? p : p + 1; }); });
   document.querySelectorAll('[data-resm]').forEach(b => b.onclick = () => { const [i, k, d] = b.dataset.resm.split(':').map(Number);
@@ -1663,6 +1693,7 @@ trEl.addEventListener('touchend', e => { if(ty0 != null && e.changedTouches[0].c
 window.addEventListener('hashchange', readHash);
 window.addEventListener('error', e => showError('Erreur sur la page', [errText(e.error || e.message)]));
 window.addEventListener('unhandledrejection', e => showError('Erreur sur la page', [errText(e.reason)]));
+console.info('Chroniques version ' + VERSION);
 load();
 if(!S.heros.length && SY.salle){ SY.v = 0; syncSave(); }
 if(OPT.moi){ const mi = findHero(OPT.moi)[1]; if(mi >= 0) heroFiltre = mi; } // la page s'ouvre sur « ma fiche »
