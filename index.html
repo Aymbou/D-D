@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0d0a07">
 <title>Chroniques – Table de jeu</title>
-<meta name="version" content="1.11.0">
+<meta name="version" content="1.11.1">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-title" content="Chroniques">
@@ -457,6 +457,10 @@ button.label.sectog{width:100%;border:0;background:none;padding:0;cursor:pointer
 .sheet.eff-stable{animation:fxStable .9s ease-out both}
 @keyframes fxStable{0%{box-shadow:0 0 0 0 rgba(95,196,135,0);transform:none}30%{box-shadow:0 0 0 4px rgba(95,196,135,.9),0 0 30px 10px rgba(95,196,135,.55);transform:scale(1.015)}100%{box-shadow:0 0 0 0 rgba(95,196,135,0);transform:none}}
 @media (prefers-reduced-motion:reduce){.mortzone.entree,.mortzone.entree .dcarte .dc-in,.bar.hpbar.retour,.sheet.eff-stable,.sheet.eff-mort{animation:none}.dc-in{transition:none}}
+/* Pas de zoom au double-tap (le zoom à deux doigts reste possible) */
+html,body,button,a,input,textarea,[role=button]{touch-action:manipulation}
+/* iPhone : un champ en dessous de 16 px fait zoomer la page quand on le touche */
+@media (pointer:coarse){input,textarea,select{font-size:16px !important}}
 </style>
 </head>
 <body>
@@ -484,7 +488,7 @@ button.label.sectog{width:100%;border:0;background:none;padding:0;cursor:pointer
    - CORRECTIF : +1 pour une simple correction ;
    - MAJEUR : changement qui casse les anciens liens ou sauvegardes.
    Penser à changer aussi <meta name="version"> en haut du fichier. */
-const VERSION = '1.11.0', VERSION_DATE = '13/11/2026';
+const VERSION = '1.11.1', VERSION_DATE = '13/11/2026';
 const KEY = 'chroniques.etat.v1', KEY_OPT = 'chroniques.options.v1';
 const TABS = [['groupe','Groupe'],['carte','Carte'],['quetes','Quêtes'],['recit','Récit'],['monde','Monde'],['regles','Règles']];
 
