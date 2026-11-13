@@ -7,7 +7,10 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0d0a07">
 <title>Chroniques – Table de jeu</title>
-<meta name="version" content="1.10.0">
+<meta name="version" content="1.11.0">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-title" content="Chroniques">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap" rel="stylesheet">
@@ -365,6 +368,7 @@ span.pip{display:inline-block;width:20px;height:20px}
 .mybar.tour{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold),0 0 16px rgba(227,191,106,.6)}
 .news{position:fixed;left:50%;bottom:calc(14px + env(safe-area-inset-bottom));z-index:58;transform:translate(-50%,160%);width:min(92vw,520px);padding:12px 40px 12px 16px;border-radius:10px;border:1.5px solid var(--gold);background:#1b140e;color:var(--cream);box-shadow:0 8px 24px rgba(0,0,0,.55);transition:transform .3s;text-align:left;cursor:pointer}
 .news.show{transform:translate(-50%,0)}
+.news:not(.show){visibility:hidden;transition:transform .3s,visibility 0s .3s}
 .news h4{margin:0 0 6px;font-family:var(--display);font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold2)}
 .news ul{margin:0;padding-left:18px;font-size:15px;line-height:1.45}
 .news .x{position:absolute;right:8px;top:8px;width:28px;height:28px;display:grid;place-items:center;color:var(--gold2)}
@@ -416,6 +420,43 @@ button.label.sectog{width:100%;border:0;background:none;padding:0;cursor:pointer
 .cptrow.tresor b{font-size:14px}
 .sec .invline{margin-top:4px}
 @media (prefers-reduced-motion:reduce){.secw,.sectog .secchev{transition:none}}
+/* jets contre la mort */
+.hprow.hptap{cursor:pointer;-webkit-tap-highlight-color:transparent}
+.mortzone{margin:7.2px 0 13px;padding:10px 12px;border:1.5px solid rgba(120,90,55,.4);border-radius:8px;background:rgba(43,29,18,.08)}
+.mortzone.entree{animation:versCartes .45s cubic-bezier(.2,.8,.3,1.2) both;transform-origin:center top}
+@keyframes versCartes{0%{opacity:0;transform:scaleY(.25)}100%{opacity:1;transform:none}}
+.mortzone.entree .dcarte .dc-in{animation:carteArrive .5s both;animation-delay:var(--d)}
+@keyframes carteArrive{0%{transform:rotateY(90deg) translateY(-6px);opacity:0}100%{transform:none;opacity:1}}
+.mortzone.entree .dcarte.on .dc-in{animation-name:carteArriveOn}
+@keyframes carteArriveOn{0%{transform:rotateY(270deg);opacity:0}100%{transform:rotateY(180deg);opacity:1}}
+.bar.hpbar.retour{animation:retourBarre .45s ease-out both;transform-origin:left center}
+@keyframes retourBarre{0%{opacity:0;transform:scaleX(.2)}100%{opacity:1;transform:none}}
+.mortligne{display:flex;align-items:center;gap:10px;margin:0 0 8px}
+.mortlab{flex:1;font-family:var(--display);font-weight:700;font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink2)}
+.dcartes{display:flex;gap:8px}
+.dcarte{width:38px;height:52px;padding:0;border:0;background:none;perspective:300px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.dc-in{position:relative;display:block;width:100%;height:100%;transform-style:preserve-3d;transition:transform .45s cubic-bezier(.3,.7,.3,1.3)}
+.dcarte.on .dc-in{transform:rotateY(180deg)}
+.dc-dos,.dc-face{position:absolute;inset:0;display:grid;place-items:center;border-radius:6px;backface-visibility:hidden;-webkit-backface-visibility:hidden;box-shadow:0 2px 4px rgba(0,0,0,.3)}
+.dc-dos{border:1.5px solid var(--gold3);background:repeating-linear-gradient(45deg,rgba(255,255,255,.08) 0 4px,transparent 4px 8px),#3b2a1b}
+.dc-dos:after{content:"";width:12px;height:12px;border:1.5px solid var(--gold3);transform:rotate(45deg);opacity:.8}
+.dc-face{transform:rotateY(180deg);color:#fff;border:1.5px solid rgba(255,255,255,.5)}
+.dcarte.r .dc-face{background:linear-gradient(180deg,#4f9a6c,#2f6b4f)}
+.dcarte.e .dc-face{background:linear-gradient(180deg,#b23a2e,#7a1f17)}
+.dc-face svg{width:20px;height:20px}
+.mortaide{margin:2px 0 0;font-size:13.5px;color:var(--ink2)}
+.lienregle{padding:0;border:0;background:none;color:var(--red2);font:inherit;font-size:13px;text-decoration:underline;cursor:pointer}
+.mortban{display:flex;align-items:center;justify-content:center;gap:8px;margin:0 0 10px;padding:7px 10px;border-radius:6px;font-family:var(--display);font-weight:900;font-size:15px;letter-spacing:.18em;text-transform:uppercase}
+.mortban svg{width:18px;height:18px}
+.mortban.ok{background:linear-gradient(180deg,#4f9a6c,#2f6b4f);color:#f3fff6}
+.mortban.ko{background:#2a2420;color:#e9e0cf}
+.mortzone.stable{border-color:rgba(47,107,79,.5)}
+.sheet.mort{filter:grayscale(.85) brightness(.92)}
+.sheet.eff-mort{animation:devientMort 1.1s ease both}
+@keyframes devientMort{0%{filter:none}100%{filter:grayscale(.85) brightness(.92)}}
+.sheet.eff-stable{animation:fxStable .9s ease-out both}
+@keyframes fxStable{0%{box-shadow:0 0 0 0 rgba(95,196,135,0);transform:none}30%{box-shadow:0 0 0 4px rgba(95,196,135,.9),0 0 30px 10px rgba(95,196,135,.55);transform:scale(1.015)}100%{box-shadow:0 0 0 0 rgba(95,196,135,0);transform:none}}
+@media (prefers-reduced-motion:reduce){.mortzone.entree,.mortzone.entree .dcarte .dc-in,.bar.hpbar.retour,.sheet.eff-stable,.sheet.eff-mort{animation:none}.dc-in{transition:none}}
 </style>
 </head>
 <body>
@@ -443,7 +484,7 @@ button.label.sectog{width:100%;border:0;background:none;padding:0;cursor:pointer
    - CORRECTIF : +1 pour une simple correction ;
    - MAJEUR : changement qui casse les anciens liens ou sauvegardes.
    Penser à changer aussi <meta name="version"> en haut du fichier. */
-const VERSION = '1.10.0', VERSION_DATE = '13/11/2026';
+const VERSION = '1.11.0', VERSION_DATE = '13/11/2026';
 const KEY = 'chroniques.etat.v1', KEY_OPT = 'chroniques.options.v1';
 const TABS = [['groupe','Groupe'],['carte','Carte'],['quetes','Quêtes'],['recit','Récit'],['monde','Monde'],['regles','Règles']];
 
@@ -560,6 +601,11 @@ function fix(s){
     r = typeof r === 'string' ? {nom:r} : r; const max = Math.max(0, parseInt(r.max) || 0);
     const reste = r.reste == null || r.reste === '' ? max : Math.max(0, Math.min(max, parseInt(r.reste) || 0));
     return Object.assign(r, {max, reste}); }); });
+  // Jets contre la mort : seulement à 0 PV ; remis à zéro dès que le héros récupère des PV
+  o.heros.forEach(x => { if(!isObj(x)) return;
+    if((Number(x.pv) || 0) > 0 || x.pvMax == null){ delete x.jetsMort; return; }
+    const j = isObj(x.jetsMort) ? x.jetsMort : {};
+    x.jetsMort = {reussites: Math.max(0, Math.min(3, parseInt(j.reussites) || 0)), echecs: Math.max(0, Math.min(3, parseInt(j.echecs) || 0)), stable: j.stable === true}; });
   // Montée de niveau automatique quand l'XP atteint le seuil (jamais de descente)
   o.heros.forEach(x => {
     if(!isObj(x) || x.xp == null || !isFinite(Number(x.xp))) return;
@@ -640,6 +686,7 @@ function validate(d, kind){
       case 'heros':
         list(v, p, (it, q) => named(it, q, 'nom', {texteSeulInterdit:true, check:(o, r) => {
           ['pv','pvMax','ca','xp','xpProchain','or'].forEach(f => num(o[f], `${r} › ${f}`));
+          if(o.jetsMort != null){ if(!isObj(o.jetsMort)) E.push(`${r} › jetsMort : doit être un objet {"reussites", "echecs", "stable"}`); else { num(o.jetsMort.reussites, `${r} › jetsMort.reussites`); num(o.jetsMort.echecs, `${r} › jetsMort.echecs`); } }
           (Array.isArray(o.inventaire) ? o.inventaire : []).forEach((it, k) => { if(isObj(it) && it.qte != null) num(it.qte, `${r} › inventaire[${k}] › qte`); });
           ['niveau','initiative','maitrise','vitesse'].forEach(f => numOrTxt(o[f], `${r} › ${f}`));
           ['classe','race','genre','couleur','embleme','notes'].forEach(f => txt(o[f], `${r} › ${f}`));
@@ -1244,6 +1291,12 @@ function showEtat(qui, e){
   $('spellBg').classList.add('open'); pop.classList.add('open');
   $('spellX').onclick = closeSpell;
 }
+function showRegle(qui, titre, texte){
+  const pop = $('spellPop'); pop.classList.add('etat'); pop.setAttribute('aria-label', titre);
+  pop.innerHTML = `<button class="trayx" id="spellX" aria-label="Fermer">${svg('x')}</button><div class="kick">${h(qui)}${qui ? ' · ' : ''}Règle</div><h3>${h(titre)}</h3>
+    ${texte.split('\n').map(l => `<p class="desc">${h(l)}</p>`).join('')}<p class="src">Source : SRD 5.2.1, « Dégâts et soins ».</p>`;
+  $('spellBg').classList.add('open'); pop.classList.add('open'); $('spellX').onclick = closeSpell;
+}
 function closeSpell(){ $('spellBg').classList.remove('open'); $('spellPop').classList.remove('open'); }
 /* ---------- sections repliables, compteurs (or, objets en plusieurs exemplaires) ---------- */
 const secOuverte = k => !(OPT.replies || []).includes(k);
@@ -1290,6 +1343,29 @@ function ressourcesHTML(x, i, lecture){
     return `<div class="resrow"><b>${h(r.nom)}<small>${rec}</small></b>${ctl}</div>`; }).join('')}</div>`;
   return lecture ? `<div class="label">Ressources</div>${corps}` : sec('ressources', 'Ressources', corps, '· touchez pour dépenser');
 }
+/* ---------- jets contre la mort (à 0 PV) ---------- */
+const etatVie = x => { if(x.pvMax == null || (Number(x.pv) || 0) > 0) return 'debout'; const j = x.jetsMort || {}; return j.echecs >= 3 ? 'mort' : j.stable ? 'stable' : 'terre'; };
+const VIE_PREC = {}, VIE_ANIM = {};
+// Retient le passage d'un état à l'autre pour jouer l'animation (barre ↔ cartes, stabilisé, mort)
+function suiviVie(x){
+  const k = norm(x.nom), e = etatVie(x), p = VIE_PREC[k];
+  if(p !== undefined && p !== e) VIE_ANIM[k] = {de: p, vers: e, until: Date.now() + 1500};
+  VIE_PREC[k] = e;
+  const a = VIE_ANIM[k]; return a && Date.now() < a.until ? a : null;
+}
+const REGLE_MORT = "Au début de chacun de ses tours à 0 PV, le héros lance 1d20, sans aucun bonus : 10 ou plus = réussite, sinon échec. À la 3e réussite, il est Stabilisé ; au 3e échec, il meurt. Pas besoin qu'elles se suivent.\nRésultat de 1 : deux échecs. Résultat de 20 : il récupère 1 point de vie.\nDégâts subis à 0 PV : un échec, deux sur un Coup critique ; s'ils atteignent son maximum de PV, il meurt.\nStabiliser : action Soutien et test de Sagesse (Médecine) DD 10. Un héros Stabilisé ne fait plus de jets mais reste Inconscient ; le moindre dégât le fait replonger. Sans soins, il récupère 1 PV au bout de 1d4 heures.\nLes compteurs reviennent à zéro dès qu'il récupère au moins 1 PV ou qu'il est Stabilisé.";
+function cartesMortHTML(x, i, anim){
+  const j = x.jetsMort || {reussites:0, echecs:0}, e = etatVie(x);
+  const entree = anim && anim.de === 'debout' ? 'entree' : '';
+  if(e === 'stable') return `<div class="mortzone ${entree} stable"><div class="mortban ok">${svg('check')} Stabilisé</div>
+    <p class="mortaide">Plus de jets contre la mort. Le moindre dégât le fait replonger ; sans soins, il récupère 1 PV au bout de 1d4 heures. <button class="lienregle" data-regmort="${i}">La règle</button></p></div>`;
+  const carte = (type, n, k) => `<button class="dcarte ${type} ${k < n ? 'on' : ''}" data-mort="${i}:${type}:${k}" aria-pressed="${k < n}" aria-label="${type === 'r' ? 'Réussite' : 'Échec'} ${k + 1}" style="--d:${k * 70 + (type === 'e' ? 210 : 0)}ms"><span class="dc-in"><span class="dc-dos"></span><span class="dc-face">${svg(type === 'r' ? 'check' : 'crane')}</span></span></button>`;
+  return `<div class="mortzone ${entree}">
+    ${e === 'mort' ? `<div class="mortban ko">${svg('crane')} Mort</div>` : ''}
+    <div class="mortligne"><span class="mortlab">Réussites</span><div class="dcartes">${[0,1,2].map(k => carte('r', j.reussites, k)).join('')}</div></div>
+    <div class="mortligne"><span class="mortlab">Échecs</span><div class="dcartes">${[0,1,2].map(k => carte('e', j.echecs, k)).join('')}</div></div>
+    ${e === 'mort' ? '' : `<p class="mortaide">À son tour : 1d20, <b>10 ou plus</b> = réussite. <button class="lienregle" data-regmort="${i}">La règle</button></p>`}</div>`;
+}
 function sheetHTML(x, i){
   const col = heroColor(x) || PALETTE[i % PALETTE.length];
   const pv = Number(x.pv)||0, max = Number(x.pvMax)||1, pct = Math.max(0, Math.min(100, pv/max*100));
@@ -1298,13 +1374,15 @@ function sheetHTML(x, i){
   const atks = x.attaques || [], tal = x.talents || x.competences || [], inv = x.inventaire || [], etats = x.etats || [];
   const kv = [x.ca!=null?['CA',x.ca]:null, x.initiative!=null?['Init.',typeof x.initiative==='number'?sgn(x.initiative):x.initiative]:null, x.vitesse?['Vitesse',x.vitesse]:null, x.maitrise?['Maîtrise',typeof x.maitrise==='number'?sgn(x.maitrise):x.maitrise]:null].filter(Boolean);
   const dpv = flashOn('heros', x.nom) ? FLASH.heros[norm(x.nom)].pv : 0;
-  return `<div class="sheet ${fl('heros',x.nom)}" id="hero-${i}"><div class="in">
+  const vie = etatVie(x), av = suiviVie(x), aTerre = vie !== 'debout';
+  const effet = av && av.vers === 'stable' ? 'eff-stable' : av && av.vers === 'mort' ? 'eff-mort' : '';
+  return `<div class="sheet ${fl('heros',x.nom)} ${vie === 'mort' ? 'mort' : ''} ${effet}" id="hero-${i}"><div class="in">
       <div class="head" style="--hc:${col}">${avatar(x, i)}<div class="qui"><h3>${h(x.nom)}</h3><p>${h([x.classe, x.niveau!=null?`niveau ${x.niveau}`:''].filter(Boolean).join(' · '))}</p><button class="moi ${estMoi(x)?'on':''}" data-moi="${i}" aria-pressed="${estMoi(x)}">${svg('etoile')}${estMoi(x)?'Ma fiche':'C\'est moi'}</button></div></div>
       <div class="body">
         ${(() => { const X = xpInfo(x); return X ? `${x.niveauMonte ? `<button class="lvlbadge" data-lvlok="${i}" aria-label="Masquer">▲ Niveau supérieur ! Niveau ${h(x.niveau)} <span>×</span></button>` : ''}<div class="xprow"><div class="label">Expérience</div><div class="xpnum">${X.xp}${X.haut != null ? `<small> / ${X.haut} XP</small>` : '<small> XP · max</small>'}</div></div>
         <div class="xpbar ${X.up ? 'up' : ''}"><i style="width:${X.pct}%"></i></div>` : ''; })()}
-        <div class="hprow"><div class="label" style="margin:0">Points de vie${hpOuvert(x) ? '' : ' <em>· touchez la barre</em>'}</div><div class="hpnum ${dpv<0?'flash-dn':dpv>0?'flash-up':''}">${pv}<small> / ${max}</small></div></div>
-        <button class="bar hpbar" data-hptoggle="${i}" aria-expanded="${hpOuvert(x)}" aria-controls="hpw-${i}" aria-label="Afficher les commandes de points de vie"><i class="${pct<=25?'low':pct<=50?'mid':''}" style="width:${pct}%"></i></button>
+        <div class="hprow ${aTerre ? 'hptap' : ''}" ${aTerre ? `data-hptoggle="${i}" role="button" tabindex="0" aria-expanded="${hpOuvert(x)}" aria-controls="hpw-${i}"` : ''}><div class="label" style="margin:0">Points de vie${hpOuvert(x) ? '' : ` <em>· touchez ${aTerre ? 'ici' : 'la barre'}</em>`}</div><div class="hpnum ${dpv<0?'flash-dn':dpv>0?'flash-up':''}">${pv}<small> / ${max}</small></div></div>
+        ${aTerre ? cartesMortHTML(x, i, av) : `<button class="bar hpbar ${av && av.de !== 'debout' ? 'retour' : ''}" data-hptoggle="${i}" aria-expanded="${hpOuvert(x)}" aria-controls="hpw-${i}" aria-label="Afficher les commandes de points de vie"><i class="${pct<=25?'low':pct<=50?'mid':''}" style="width:${pct}%"></i></button>`}
         <div class="hpwrap ${hpOuvert(x)?'open':''}" id="hpw-${i}"><div class="hpin"><div class="hpctl">
           <div class="r1"><button class="ring" data-hp="${i}:-1" aria-label="Moins un">−</button><button class="ring" data-hp="${i}:1" aria-label="Plus un">+</button><span class="sep"></span><input id="hpNb-${i}" type="number" inputmode="numeric" placeholder="Nombre de PV"></div>
           <div class="r2"><button class="act hurt" data-hurt="${i}">Blesser</button><button class="act heal" data-heal="${i}">Soigner</button></div>
@@ -1406,6 +1484,7 @@ function renderRegles(){
     <textarea class="field" id="impTxt" placeholder="Collez ici un lien du MJ ou un bloc JSON"></textarea>
     <div class="btnrow"><button class="btn" id="impBtn">Charger</button><button class="btn" id="expBtn">Copier la sauvegarde</button><button class="btn danger" id="resetBtn">Nouvelle partie</button></div>
     ${renderSync()}
+    ${renderAppli()}
     <div class="label">Comment jouer</div>
     <div class="rules">
       <ul>
@@ -1415,7 +1494,7 @@ function renderRegles(){
         <li>Combat : ordre de tour fixe décidé au début. À son tour, on peut se déplacer, faire une action, une action bonus.</li>
         <li>« Copier la sauvegarde » donne un lien à recoller dans une nouvelle conversation pour reprendre la partie.</li>
       </ul>
-      <p style="font-size:16px;color:var(--ink2)">Format des liens : <code>#etat={…}</code> remplace toute la partie, <code>#maj={…}</code> modifie seulement ce qui est indiqué (héros, ennemis, quêtes, lieux et ressources sont retrouvés par leur nom ; portrait dessiné d'après la race et la classe trouvées dans <code>classe</code> (ou les champs <code>race</code> et <code>genre</code> : <code>"f"</code> ou <code>"m"</code> ; <code>"portrait":false</code> garde l'emblème) ; or d'un héros : <code>"or":29</code> ; objet en plusieurs exemplaires : <code>{"nom":"Flèches","qte":20}</code> ; ressource d'un héros : <code>{"nom":"Rage","max":2,"reste":1,"repos":"long","court":1}</code>, où <code>repos</code> vaut <code>court</code> ou <code>long</code> et <code>court</code> est le nombre d'utilisations rendues par un repos court ; <code>"journal+":[…]</code> ajoute une entrée ; <code>"supprimer":true</code> retire un élément).</p>
+      <p style="font-size:16px;color:var(--ink2)">Format des liens : <code>#etat={…}</code> remplace toute la partie, <code>#maj={…}</code> modifie seulement ce qui est indiqué (héros, ennemis, quêtes, lieux et ressources sont retrouvés par leur nom ; portrait dessiné d'après la race et la classe trouvées dans <code>classe</code> (ou les champs <code>race</code> et <code>genre</code> : <code>"f"</code> ou <code>"m"</code> ; <code>"portrait":false</code> garde l'emblème) ; or d'un héros : <code>"or":29</code> ; objet en plusieurs exemplaires : <code>{"nom":"Flèches","qte":20}</code> ; jets contre la mort à 0 PV : <code>"jetsMort":{"reussites":1,"echecs":2,"stable":false}</code> ; ressource d'un héros : <code>{"nom":"Rage","max":2,"reste":1,"repos":"long","court":1}</code>, où <code>repos</code> vaut <code>court</code> ou <code>long</code> et <code>court</code> est le nombre d'utilisations rendues par un repos court ; <code>"journal+":[…]</code> ajoute une entrée ; <code>"supprimer":true</code> retire un élément).</p>
     </div>
     <p class="version">Chroniques · version ${VERSION} du ${VERSION_DATE}</p>`);
 }
@@ -1433,6 +1512,7 @@ function draw(){
     + `<div class="grid2">${renderRegles()}</div>`
     + '<div style="height:24px"></div>';
   document.title = (S.titre || 'Chroniques') + ' – Table de jeu';
+  S.heros.forEach(x => { if(isObj(x)) suiviVie(x); }); // fiches masquées : garder l'état à jour
   stars();
   const fab = document.getElementById('fab'); fab.innerHTML = D20('rgba(0,0,0,0)','#f6d2bf'); fab.classList.toggle('hidden', !OPT.desVirtuels);
   bind();
@@ -1475,6 +1555,7 @@ function resumeChangements(a, b){
       const dpv = (Number(y.pv) || 0) - (Number(x.pv) || 0);
       if(dpv){ f.pv = dpv; L.push(`${y.nom} ${dpv < 0 ? '−' : '+'}${Math.abs(dpv)} PV (${y.pv ?? '?'} / ${y.pvMax ?? '?'})`); }
       if(y.pvMax != null && Number(y.pvMax) !== Number(x.pvMax)) L.push(`${y.nom} : PV max ${x.pvMax ?? '?'} → ${y.pvMax}`);
+      { const ev = etatVie(y), ex = etatVie(x); if(ev !== ex && ev !== 'debout') L.push(`${y.nom} : ${ev === 'mort' ? 'mort' : ev === 'stable' ? 'stabilisé' : 'à 0 PV, jets contre la mort'}`); }
       if(y.or != null && nombre(y.or) !== nombre(x.or)) L.push(`${y.nom} : bourse ${nombre(x.or)} → ${nombre(y.or)} po`);
       const dxp = (Number(y.xp) || 0) - (Number(x.xp) || 0); if(dxp > 0) L.push(`${y.nom} +${dxp} XP`);
       if((parseInt(y.niveau) || 0) > (parseInt(x.niveau) || 0)) L.push(`${y.nom} passe niveau ${y.niveau}`);
@@ -1577,6 +1658,16 @@ function bind(){
     if(norm(r.repos) === 'court') r.reste = r.max; else if(Number(r.court) > 0) r.reste = Math.min(r.max, (Number(r.reste)||0) + Number(r.court)); })),
     '☕ Repos court : ressources récupérées (les dés de vie se lancent à la main)'));
   const two = v => v.split(':');
+  document.querySelectorAll('[data-mort]').forEach(b => b.onclick = () => {
+    const [i, t, k] = two(b.dataset.mort), x = S.heros[+i]; if(!x || !x.jetsMort || b.closest('.mortzone').dataset.attente) return;
+    const cle = t === 'r' ? 'reussites' : 'echecs', avant = x.jetsMort[cle], apres = +k < avant ? +k : +k + 1;
+    // la carte se retourne tout de suite, l'état est enregistré une fois l'animation finie
+    const zone = b.closest('.mortzone'); zone.dataset.attente = '1';
+    zone.querySelectorAll(`[data-mort^="${i}:${t}:"]`).forEach(c => { const on = +c.dataset.mort.split(':')[2] < apres; c.style.setProperty('--d', '0ms'); c.classList.toggle('on', on); c.setAttribute('aria-pressed', on); });
+    setTimeout(() => change(() => { const j = S.heros[+i].jetsMort; if(!j) return; j[cle] = apres;
+      if(j.reussites >= 3){ j.stable = true; j.reussites = 0; j.echecs = 0; } },
+      t === 'r' && apres >= 3 ? `✚ ${x.nom} est stabilisé` : t === 'e' && apres >= 3 ? `☠ ${x.nom} est mort` : ''), 480); });
+  document.querySelectorAll('[data-regmort]').forEach(b => b.onclick = () => { const x = S.heros[+b.dataset.regmort]; showRegle(x ? x.nom : '', 'Jets contre la mort', REGLE_MORT); });
   document.querySelectorAll('[data-cpt]').forEach(b => b.onclick = () => { const v = b.dataset.cpt, d = +v.slice(v.lastIndexOf(':') + 1);
     change(() => appliquerCompteur(v.slice(0, v.lastIndexOf(':')), n => n + d)); });
   document.querySelectorAll('[data-cptset]').forEach(inp => { inp.onfocus = () => inp.select();
@@ -1597,9 +1688,10 @@ function bind(){
   document.querySelectorAll('[data-moi]').forEach(b => b.onclick = () => { const i = +b.dataset.moi, x = S.heros[i]; if(!x) return;
     const deja = estMoi(x); OPT.moi = deja ? '' : x.nom; saveOpt(); if(!deja) heroFiltre = i; render();
     toast(deja ? 'Ce téléphone ne suit plus de fiche' : `★ ${x.nom} : votre fiche sur ce téléphone`); });
-  document.querySelectorAll('[data-hp]').forEach(b => b.onclick = () => { const [i, d] = two(b.dataset.hp); change(() => { const x = S.heros[+i]; x.pv = Math.max(0, Math.min(Number(x.pvMax)||999, (Number(x.pv)||0) + Number(d))); }); });
+  document.querySelectorAll('[data-hp]').forEach(b => b.onclick = () => { const [i, d] = two(b.dataset.hp); change(() => { const x = S.heros[+i]; if(+d < 0 && (Number(x.pv)||0) <= 0 && x.jetsMort) x.jetsMort.stable = false; x.pv = Math.max(0, Math.min(Number(x.pvMax)||999, (Number(x.pv)||0) + Number(d))); }); });
   const nb = i => Math.abs(parseInt(($('hpNb-' + i)||{}).value)) || 0;
-  document.querySelectorAll('[data-hurt]').forEach(b => b.onclick = () => { const i = +b.dataset.hurt, n = nb(i); if(!n) return toast('Indiquez un nombre'); change(() => { const x = S.heros[i]; x.pv = Math.max(0, (Number(x.pv)||0) - n); }, `${S.heros[i].nom} perd ${n} PV`); });
+  document.querySelectorAll('[data-hurt]').forEach(b => b.onclick = () => { const i = +b.dataset.hurt, n = nb(i); if(!n) return toast('Indiquez un nombre'); const x0 = S.heros[i], aZero = (Number(x0.pv)||0) <= 0 && x0.pvMax != null;
+    change(() => { const x = S.heros[i]; x.pv = Math.max(0, (Number(x.pv)||0) - n); if(aZero && x.jetsMort) x.jetsMort.stable = false; }, aZero ? `Dégâts à 0 PV : cochez un échec (deux sur un coup critique)` : `${x0.nom} perd ${n} PV`); });
   document.querySelectorAll('[data-heal]').forEach(b => b.onclick = () => { const i = +b.dataset.heal, n = nb(i); if(!n) return toast('Indiquez un nombre'); change(() => { const x = S.heros[i]; x.pv = Math.min(Number(x.pvMax)||999, (Number(x.pv)||0) + n); }, `${S.heros[i].nom} récupère ${n} PV`); });
   document.querySelectorAll('[data-check]').forEach(b => b.onclick = () => { const [i, k] = two(b.dataset.check), x = S.heros[+i], c = x.carac || x.caracteristiques; rollSpec({label:`${x.nom} · test de ${k}`, des:[{n:1,f:20}], mod:mod(c[k]), adv:tray.adv}); });
   document.querySelectorAll('[data-atk]').forEach(b => b.onclick = () => { const [i, j] = two(b.dataset.atk), x = S.heros[+i], a = x.attaques[+j];
@@ -1607,6 +1699,7 @@ function bind(){
   document.querySelectorAll('[data-tal]').forEach(b => b.onclick = () => { const [i, j] = two(b.dataset.tal), x = S.heros[+i], t = (x.talents||x.competences)[+j];
     rollSpec({label:`${x.nom} · ${typeof t==='string'?t:t.nom}`, des:[{n:1,f:20}], mod:typeof t==='object'?Number(t.bonus)||0:0, adv:tray.adv}); });
   on('swDice', () => { OPT.desVirtuels = !OPT.desVirtuels; saveOpt(); render(); toast(OPT.desVirtuels ? '🎲 Dés virtuels activés' : 'Dés virtuels désactivés : à vos vrais dés !'); });
+  on('installBtn', async () => { if(!invitInstall) return; invitInstall.prompt(); try{ await invitInstall.userChoice; }catch(e){} invitInstall = null; render(); });
   on('impBtn', async () => { const ok = await importFrom($('impTxt').value); if(ok) window.scrollTo({top:0, behavior:'smooth'}); });
   on('expBtn', share);
   let armed = false;
@@ -1752,6 +1845,23 @@ async function syncInviter(){
 }
 const SYNC_TXT = {off:'Désactivée : cette table ne se met à jour que sur ce téléphone.', connexion:'Connexion au relais…', ok:'Connectée : les changements arrivent sur tous les téléphones de la table.', erreur:'Dernier envoi en échec. Vérifiez la connexion internet.'};
 function majStatutSync(){ const e = $('syncStatut'); if(e) e.textContent = SYNC_TXT[syncEtat] || ''; }
+/* ---------- appli sur l'écran d'accueil (hors ligne) ---------- */
+const enAppli = () => (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+const surIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+let invitInstall = null;
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); invitInstall = e; if(document.getElementById('appliBloc')) render(); });
+window.addEventListener('appinstalled', () => { invitInstall = null; toast('📲 Appli installée'); render(); });
+if('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost'))
+  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(e => console.warn('Hors ligne indisponible', e)));
+function renderAppli(){
+  let corps;
+  if(enAppli()) corps = `<p style="font-size:14px;margin:0">Vous utilisez l'appli : elle s'ouvre même sans réseau. ${SY.salle ? 'Elle suit la table partagée.' : '<b>Pour recevoir les liens du MJ, rejoignez la table partagée ici</b> : collez le lien d\'invitation dans « Charger un lien du MJ ».'}</p>`;
+  else if(invitInstall) corps = `<div class="btnrow" style="margin-top:0"><button class="btn" id="installBtn">Installer l'appli</button></div>`;
+  else if(surIOS()) corps = `<p style="font-size:14px;margin:0">Dans Safari : touchez <b>Partager</b>, puis <b>« Sur l'écran d'accueil »</b>.</p>`;
+  else corps = `<p style="font-size:14px;margin:0">Dans le menu du navigateur : <b>« Installer l'application »</b> ou <b>« Ajouter à l'écran d'accueil »</b>.</p>`;
+  return `<div id="appliBloc"><div class="label">Appli sur l'écran d'accueil</div>${corps}
+    ${enAppli() ? '' : `<p style="font-size:13px;color:var(--ink2);margin:6px 0 0">L'appli s'ouvre même sans réseau. Elle a sa propre mémoire : rejoignez-y la table partagée une fois (lien d'invitation), et les liens du MJ arriveront tout seuls.</p>`}</div>`;
+}
 function renderSync(){
   return `<div class="label">Table partagée</div>
     <p style="font-size:14px;margin:0 0 6px" id="syncStatut">${SYNC_TXT[syncEtat]}</p>
