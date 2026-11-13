@@ -392,11 +392,12 @@ const XP_SEUILS = [0,300,900,2700,6500,14000,23000,34000,48000,64000,85000,10000
 let LEVELUPS = [];
 let heroFiltre = null; // null = toutes les fiches, sinon l'index du héros affiché
 let S = VIDE(), undoStack = [], tab = 'groupe', heroSel = 0, editScene = false, sceneCollapsed = false, saved = true;
-let OPT = {desVirtuels:true};
+let OPT = {desVirtuels:false};
 
 const KEY_PREV = KEY + '.precedent', KEY_BROKEN = KEY + '.illisible';
 function load(){
   try{ const o = JSON.parse(localStorage.getItem(KEY_OPT)); if(o) OPT = Object.assign(OPT,o); }catch(e){}
+  OPT.desVirtuels = false; // dés virtuels toujours désactivés à l'ouverture de la page
   const tryState = raw => { const d = JSON.parse(raw); const errs = validate(d, 'etat'); if(errs.length) throw new Error(errs.join(' ; ')); S = fix(d); draw(); };
   let cur = null; try{ cur = localStorage.getItem(KEY); }catch(e){}
   if(!cur){ S = VIDE(); return; }
