@@ -890,7 +890,11 @@ function sheetHTML(x, i){
         ${etats.length ? `<div class="tags" style="margin-top:10px">${etats.map(e => `<span class="tag bad">${h(e)}</span>`).join('')}</div>` : ''}
         ${CK.some(k => car[k]!=null) ? `<div class="label">Caractéristiques</div><div class="stats6">${CK.map(k => car[k]==null ? '' : `<button class="stat" data-check="${i}:${k}"><small>${k}</small><b>${h(car[k])}</b><span>${sgn(mod(car[k]))}</span></button>`).join('')}</div>` : ''}
         ${atks.length ? `<div class="label">Attaques</div><div class="chipsrow">${atks.map((a,j) => `<button class="rollchip" data-atk="${i}:${j}">${D20()}${h(a.nom)} <em>${a.toucher!=null?sgn(Number(a.toucher))+' · ':''}${h(a.degats||'')}</em></button>`).join('')}</div>` : ''}
-        ${tal.length ? `<div class="label">Talents</div><div class="chipsrow">${tal.map((a,j) => `<button class="rollchip" data-tal="${i}:${j}">${D20()}${h(typeof a==='string'?a:a.nom)} <em>${typeof a==='object' && a.bonus!=null ? sgn(Number(a.bonus)) : ''}</em></button>`).join('')}</div>` : ''}
+        ${(() => { const estJS = a => /^(JS|jets? de sauvegarde)\b/i.test(String(typeof a==='string'?a:(a&&a.nom)||'').trim());
+          const chip = (a,j) => `<button class="rollchip" data-tal="${i}:${j}">${D20()}${h(typeof a==='string'?a:a.nom)} <em>${typeof a==='object' && a.bonus!=null ? sgn(Number(a.bonus)) : ''}</em></button>`;
+          const comp = [], js = []; tal.forEach((a,j) => (estJS(a) ? js : comp).push(chip(a,j)));
+          return (comp.length ? `<div class="label">Talents</div><div class="chipsrow">${comp.join('')}</div>` : '')
+               + (js.length ? `<div class="label">Jets de sauvegarde</div><div class="chipsrow">${js.join('')}</div>` : ''); })()}
         ${x.sorts && x.sorts.length ? `<div class="label">Sorts <em>· touchez pour le détail</em></div><div class="tags">${x.sorts.map((sp,j) => { const o = typeof sp === 'string' ? {nom:sp} : sp; const nv = niveauSort(o.niveau, true);
           return `<button class="tag spell" data-spell="${i}:${j}">${nv ? `<span class="nv">${h(nv)}</span>` : ''}${h(o.nom)}<span class="info">i</span></button>`; }).join('')}</div>` : ''}
         ${inv.length ? `<div class="label">Besace</div><p class="invline">${inv.map(o => `<span>${h(typeof o==='string'?o:(o.nom + (o.qte>1?` ×${o.qte}`:'')))}</span>`).join('')}</p>` : ''}
