@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0d0a07">
 <title>Chroniques – Table de jeu</title>
-<meta name="version" content="1.9.0">
+<meta name="version" content="1.9.1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap" rel="stylesheet">
@@ -388,6 +388,9 @@ button.bar.hpbar:active{transform:scale(.99)}
 .hpctl .r2 .act{width:100%}
 @media (prefers-reduced-motion:reduce){.hpwrap{transition:none}}
 .version{margin:18px 0 0;text-align:center;font-family:var(--display);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink2)}
+body.sous-barre .toast,body.sous-barre .errbox{top:var(--notif-top)}
+.toast,.errbox{transition:transform .25s,top .25s,visibility 0s}
+.toast:not(.show),.errbox:not(.show){visibility:hidden;transition:transform .25s,top .25s,visibility 0s .25s}
 </style>
 </head>
 <body>
@@ -415,7 +418,7 @@ button.bar.hpbar:active{transform:scale(.99)}
    - CORRECTIF : +1 pour une simple correction ;
    - MAJEUR : changement qui casse les anciens liens ou sauvegardes.
    Penser à changer aussi <meta name="version"> en haut du fichier. */
-const VERSION = '1.9.0', VERSION_DATE = '13/11/2026';
+const VERSION = '1.9.1', VERSION_DATE = '13/11/2026';
 const KEY = 'chroniques.etat.v1', KEY_OPT = 'chroniques.options.v1';
 const TABS = [['groupe','Groupe'],['carte','Carte'],['quetes','Quêtes'],['recit','Récit'],['monde','Monde'],['regles','Règles']];
 
@@ -1383,8 +1386,12 @@ function renderMyBar(){
   el.innerHTML = `${avatar(x, i)}<span class="who"><b>${h(x.nom)}</b>${tour ? '<span class="turn">À vous de jouer</span>' : ''}<span class="mbar"><i class="${pct<=25?'low':pct<=50?'mid':''}" style="width:${pct}%"></i></span></span><span class="pvt">${pv}<small> / ${max} PV</small></span>${x.ca != null ? `<span class="ca">CA ${h(x.ca)}</span>` : ''}`;
 }
 function majMyBar(){
-  const el = $('mybar'), sky = document.querySelector('.sky'); if(!el || el.hidden) return;
-  el.classList.toggle('show', !!sky && window.scrollY > sky.offsetHeight - 30);
+  const el = $('mybar'), sky = document.querySelector('.sky'); if(!el) return;
+  const vue = !el.hidden && !!sky && window.scrollY > sky.offsetHeight - 30;
+  el.classList.toggle('show', vue);
+  // Les notifications du haut (message, erreur) se placent sous la barre quand elle est affichée
+  document.documentElement.style.setProperty('--notif-top', vue ? (el.offsetTop + el.offsetHeight + 8) + 'px' : '0px');
+  document.body.classList.toggle('sous-barre', vue);
 }
 
 /* ---------- nouveautés après une mise à jour reçue (MJ ou table partagée) ---------- */
