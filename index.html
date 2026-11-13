@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0d0a07">
 <title>Chroniques – Table de jeu</title>
-<meta name="version" content="1.9.1">
+<meta name="version" content="1.9.2">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap" rel="stylesheet">
@@ -339,7 +339,10 @@ span.pip{display:inline-block;width:20px;height:20px}
 .spellpop.etat h3{color:#7a1f17}
 .spellpop.etat .desc{margin:0 0 8px}
 .spellpop .src{margin:10px 0 0;font-size:12px;font-style:italic;color:var(--ink3)}
-.sheet .head .moi{margin-left:auto;align-self:flex-start;flex:none;display:inline-flex;align-items:center;gap:5px;padding:6px 10px;border-radius:999px;border:1.5px solid rgba(255,240,210,.6);background:rgba(0,0,0,.22);color:#fbf0d8;font-family:var(--display);font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.sheet .head{position:relative}
+.sheet .head .qui{min-width:0;flex:1;padding-bottom:36px}
+.sheet .head h3{overflow-wrap:anywhere}
+.sheet .head .moi{position:absolute;right:12px;bottom:11px;display:inline-flex;align-items:center;gap:5px;padding:6px 10px;border-radius:999px;border:1.5px solid rgba(255,240,210,.6);background:rgba(0,0,0,.22);color:#fbf0d8;font-family:var(--display);font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
 .sheet .head .moi svg{width:13px;height:13px}
 .sheet .head .moi.on{background:#fbf0d8;color:#5a3a0c;border-color:var(--gold)}
 .sheet{scroll-margin-top:70px}
@@ -418,7 +421,7 @@ body.sous-barre .toast,body.sous-barre .errbox{top:var(--notif-top)}
    - CORRECTIF : +1 pour une simple correction ;
    - MAJEUR : changement qui casse les anciens liens ou sauvegardes.
    Penser à changer aussi <meta name="version"> en haut du fichier. */
-const VERSION = '1.9.1', VERSION_DATE = '13/11/2026';
+const VERSION = '1.9.2', VERSION_DATE = '13/11/2026';
 const KEY = 'chroniques.etat.v1', KEY_OPT = 'chroniques.options.v1';
 const TABS = [['groupe','Groupe'],['carte','Carte'],['quetes','Quêtes'],['recit','Récit'],['monde','Monde'],['regles','Règles']];
 
@@ -1234,7 +1237,7 @@ function sheetHTML(x, i){
   const kv = [x.ca!=null?['CA',x.ca]:null, x.initiative!=null?['Init.',typeof x.initiative==='number'?sgn(x.initiative):x.initiative]:null, x.vitesse?['Vitesse',x.vitesse]:null, x.maitrise?['Maîtrise',typeof x.maitrise==='number'?sgn(x.maitrise):x.maitrise]:null].filter(Boolean);
   const dpv = flashOn('heros', x.nom) ? FLASH.heros[norm(x.nom)].pv : 0;
   return `<div class="sheet ${fl('heros',x.nom)}" id="hero-${i}"><div class="in">
-      <div class="head" style="--hc:${col}">${avatar(x, i)}<div><h3>${h(x.nom)}</h3><p>${h([x.classe, x.niveau!=null?`niveau ${x.niveau}`:''].filter(Boolean).join(' · '))}</p></div><button class="moi ${estMoi(x)?'on':''}" data-moi="${i}" aria-pressed="${estMoi(x)}">${svg('etoile')}${estMoi(x)?'Ma fiche':'C\'est moi'}</button></div>
+      <div class="head" style="--hc:${col}">${avatar(x, i)}<div class="qui"><h3>${h(x.nom)}</h3><p>${h([x.classe, x.niveau!=null?`niveau ${x.niveau}`:''].filter(Boolean).join(' · '))}</p><button class="moi ${estMoi(x)?'on':''}" data-moi="${i}" aria-pressed="${estMoi(x)}">${svg('etoile')}${estMoi(x)?'Ma fiche':'C\'est moi'}</button></div></div>
       <div class="body">
         ${(() => { const X = xpInfo(x); return X ? `${x.niveauMonte ? `<button class="lvlbadge" data-lvlok="${i}" aria-label="Masquer">▲ Niveau supérieur ! Niveau ${h(x.niveau)} <span>×</span></button>` : ''}<div class="xprow"><div class="label">Expérience</div><div class="xpnum">${X.xp}${X.haut != null ? `<small> / ${X.haut} XP</small>` : '<small> XP · max</small>'}</div></div>
         <div class="xpbar ${X.up ? 'up' : ''}"><i style="width:${X.pct}%"></i></div>` : ''; })()}
