@@ -7,6 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0d0a07">
 <title>Chroniques – Table de jeu</title>
+<meta name="version" content="1.9.0">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap" rel="stylesheet">
@@ -386,6 +387,7 @@ button.bar.hpbar:active{transform:scale(.99)}
 .hpctl .r2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .hpctl .r2 .act{width:100%}
 @media (prefers-reduced-motion:reduce){.hpwrap{transition:none}}
+.version{margin:18px 0 0;text-align:center;font-family:var(--display);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink2)}
 </style>
 </head>
 <body>
@@ -408,6 +410,12 @@ button.bar.hpbar:active{transform:scale(.99)}
      #maj=<JSON>    met à jour une partie de l'état
    (JSON brut encodé pour URL, ou b64:<base64url>, ou z:<deflate-raw base64url>)
    ========================================================= */
+/* Version du site : MAJEUR.MINEUR.CORRECTIF
+   - MINEUR : +1 à chaque nouvelle fonction (en pratique, chaque demande de fusion) ;
+   - CORRECTIF : +1 pour une simple correction ;
+   - MAJEUR : changement qui casse les anciens liens ou sauvegardes.
+   Penser à changer aussi <meta name="version"> en haut du fichier. */
+const VERSION = '1.9.0', VERSION_DATE = '13/11/2026';
 const KEY = 'chroniques.etat.v1', KEY_OPT = 'chroniques.options.v1';
 const TABS = [['groupe','Groupe'],['carte','Carte'],['quetes','Quêtes'],['recit','Récit'],['monde','Monde'],['regles','Règles']];
 
@@ -1340,7 +1348,8 @@ function renderRegles(){
         <li>« Copier la sauvegarde » donne un lien à recoller dans une nouvelle conversation pour reprendre la partie.</li>
       </ul>
       <p style="font-size:16px;color:var(--ink2)">Format des liens : <code>#etat={…}</code> remplace toute la partie, <code>#maj={…}</code> modifie seulement ce qui est indiqué (héros, ennemis, quêtes, lieux et ressources sont retrouvés par leur nom ; portrait dessiné d'après la race et la classe trouvées dans <code>classe</code> (ou les champs <code>race</code> et <code>genre</code> : <code>"f"</code> ou <code>"m"</code> ; <code>"portrait":false</code> garde l'emblème) ; ressource d'un héros : <code>{"nom":"Rage","max":2,"reste":1,"repos":"long","court":1}</code>, où <code>repos</code> vaut <code>court</code> ou <code>long</code> et <code>court</code> est le nombre d'utilisations rendues par un repos court ; <code>"journal+":[…]</code> ajoute une entrée ; <code>"supprimer":true</code> retire un élément).</p>
-    </div>`);
+    </div>
+    <p class="version">Chroniques · version ${VERSION} du ${VERSION_DATE}</p>`);
 }
 
 function render(){
@@ -1684,6 +1693,7 @@ trEl.addEventListener('touchend', e => { if(ty0 != null && e.changedTouches[0].c
 window.addEventListener('hashchange', readHash);
 window.addEventListener('error', e => showError('Erreur sur la page', [errText(e.error || e.message)]));
 window.addEventListener('unhandledrejection', e => showError('Erreur sur la page', [errText(e.reason)]));
+console.info('Chroniques version ' + VERSION);
 load();
 if(!S.heros.length && SY.salle){ SY.v = 0; syncSave(); }
 if(OPT.moi){ const mi = findHero(OPT.moi)[1]; if(mi >= 0) heroFiltre = mi; } // la page s'ouvre sur « ma fiche »
