@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0d0a07">
 <title>Chroniques – Table de jeu</title>
-<meta name="version" content="1.13.0">
+<meta name="version" content="1.14.0">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-title" content="Chroniques">
@@ -356,6 +356,8 @@ nav.tabs button.on svg{filter:drop-shadow(0 0 4.3px rgba(217,178,95,.6))}
 .pip{width:28px;height:28px;border-radius:50%;border:2px solid var(--gold3);background:rgba(255,250,236,.6);padding:0}
 .pip.on{background:radial-gradient(circle at 40% 35%,#fbe7a6,#d9b25f 55%,#a3782b);border-color:#7a5a1e;box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 1px 2px rgba(0,0,0,.3)}
 span.pip{display:inline-block;width:20px;height:20px}
+.resinfo{display:block;width:100%;padding:0;text-align:left;font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+.resinfo .info{display:inline-grid;place-items:center;width:15px;height:15px;margin-left:6px;vertical-align:1px;border-radius:50%;border:1.2px solid var(--ink3);font-family:var(--display);font-size:10px;font-weight:700;color:var(--ink2)}
 .resnum{font-family:var(--display);font-weight:700;font-size:15px;min-width:54px;text-align:center}
 .resrow .ring{width:34px;height:34px}
 .restrow{display:flex;flex-wrap:wrap;gap:8px}
@@ -531,7 +533,7 @@ html,body{overscroll-behavior-y:contain}
    - CORRECTIF : +1 pour une simple correction ;
    - MAJEUR : changement qui casse les anciens liens ou sauvegardes.
    Penser à changer aussi <meta name="version"> en haut du fichier. */
-const VERSION = '1.13.0', VERSION_DATE = '13/11/2026';
+const VERSION = '1.14.0', VERSION_DATE = '13/11/2026';
 const KEY = 'chroniques.etat.v1', KEY_OPT = 'chroniques.options.v1';
 const TABS = [['groupe','Groupe'],['carte','Carte'],['quetes','Quêtes'],['recit','Récit'],['monde','Monde'],['regles','Règles']];
 
@@ -1380,6 +1382,50 @@ function appliquerCompteur(cle, f){
   else if(k === 'inv'){ const x = S.heros[+a], c = objCompte(x.inventaire[+b]); if(!c) return; c.qte = Math.max(0, f(c.qte));
     const o = x.inventaire[+b]; x.inventaire[+b] = isObj(o) ? Object.assign(o, c) : c; }
 }
+/* ---------- description des ressources (textes du SRD 5.2.1) ----------
+   Une ressource peut porter son propre champ "description" ; sinon on cherche ici d'après son nom. */
+const RESS_SRD = {
+  'Rage': "Par une action Bonus, si vous ne portez pas d'armure lourde. Vous regagnez une utilisation au Repos court et toutes au Repos long. Tant que la Rage est active :\nRésistance aux dégâts. Résistance aux dégâts contondants, perforants et tranchants.\nDégâts de Rage. Bonus aux dégâts des attaques basées sur la Force (arme ou mains nues) : +2 au niveau 1.\nAvantage en Force. Avantage aux tests et aux jets de sauvegarde de Force.\nNi Concentration ni sorts. Vous ne pouvez pas maintenir votre Concentration ni lancer de sorts.\nDurée. Jusqu'à la fin de votre tour suivant ; elle se termine si vous enfilez une armure lourde ou subissez l'état Neutralisé. Vous la prolongez d'un round en attaquant un ennemi, en lui imposant un jet de sauvegarde ou par une action Bonus, jusqu'à 10 minutes.",
+  'Second souffle': "Par une action Bonus, vous récupérez des points de vie égaux à 1d10 + votre niveau de Guerrier. Vous regagnez une utilisation au Repos court et toutes au Repos long.",
+  'Inspiration bardique': "Par une action Bonus, vous inspirez une autre créature qui vous voit ou vous entend dans un rayon de 18 m : elle reçoit un dé d'Inspiration bardique (d6). Une fois dans l'heure, lorsqu'elle rate un Test d20, elle peut lancer ce dé et ajouter le résultat, ce qui peut convertir l'échec en réussite. Nombre d'utilisations : votre modificateur de Charisme (minimum 1), récupérées au Repos long.",
+  'Sorcellerie innée': "Par une action Bonus, vous libérez votre magie pendant 1 minute : le DD de sauvegarde de vos sorts d'Ensorceleur augmente de 1 et vous avez l'Avantage aux jets d'attaque de vos sorts d'Ensorceleur. Deux utilisations, récupérées au Repos long.",
+  'Restauration magique': "En terminant un Repos court, vous récupérez des emplacements de sort dépensés en étudiant votre grimoire : la somme de leurs niveaux ne dépasse pas la moitié de votre niveau de Magicien (arrondie au supérieur), soit un emplacement du 1er niveau au niveau 1. Ensuite, il faut un Repos long pour y recourir de nouveau.",
+  'Imposition des mains': "Réserve de puissance curatrice égale à cinq fois votre niveau de Paladin, reconstituée au Repos long. Par une action Bonus, d'un simple contact, vous restituez autant de points de vie que vous voulez (dans la limite de la réserve) à une créature, vous compris. Vous pouvez aussi dépenser 5 points de la réserve pour supprimer l'état Empoisonné de la créature (sans lui rendre de PV).",
+  'Inspiration héroïque': "Vous pouvez la dépenser pour rejouer aussitôt tout dé que vous venez de lancer, en conservant le nouveau jet. Vous ne pouvez en avoir qu'une à la fois : si vous en recevez une autre, vous pouvez la confier à un personnage-joueur qui n'en a pas. Le MJ peut l'accorder pour un geste héroïque ou une belle interprétation ; l'humain (Ingénieux) la reçoit à chaque Repos long.",
+  'Souffle': "Quand vous entreprenez l'action Attaque, vous pouvez remplacer l'une de vos attaques par une expiration d'énergie : Cône de 4,50 m ou Ligne de 9 m sur 1,50 m. Chaque créature dans la zone fait un jet de sauvegarde de Dextérité (DD 8 + modificateur de Constitution + bonus de maîtrise). Échec : 1d10 dégâts du type de votre ascendance draconique ; réussite : moitié. Utilisations : votre bonus de maîtrise, récupérées au Repos long.",
+  'Connaissance de la pierre': "Par une action Bonus, vous recevez la Perception des vibrations à 18 m pendant 10 minutes, tant que vous êtes sur une surface en pierre (naturelle ou façonnée) ou en contact avec elle. Utilisations : votre bonus de maîtrise, récupérées au Repos long.",
+  "Poussée d'adrénaline": "Vous pouvez entreprendre l'action Pointe par une action Bonus ; vous recevez alors des points de vie temporaires égaux à votre bonus de maîtrise. Utilisations : votre bonus de maîtrise, récupérées au Repos court ou long.",
+  'Acharnement': "Si vous tombez à 0 point de vie sans être tué sur le coup, vous pouvez vous retrouver à 1 point de vie. Ensuite, il faut un Repos long pour y recourir de nouveau.",
+  'Brûlure ignée': "Lorsque vous touchez une cible avec un jet d'attaque et lui infligez des dégâts, vous pouvez lui infliger 1d10 dégâts de feu supplémentaires. Utilisations : votre bonus de maîtrise, récupérées au Repos long.",
+  'Endurance de la pierre': "Lorsque vous subissez des dégâts, vous pouvez jouer votre Réaction pour lancer 1d12, ajouter votre modificateur de Constitution et réduire les dégâts de ce total. Utilisations : votre bonus de maîtrise, récupérées au Repos long.",
+  'Froid mordant': "Lorsque vous touchez une cible avec un jet d'attaque et lui infligez des dégâts, vous pouvez lui infliger 1d6 dégâts de froid supplémentaires et réduire sa Vitesse de 3 m jusqu'au début de votre tour suivant. Utilisations : votre bonus de maîtrise, récupérées au Repos long.",
+  'Renversement des coteaux': "Lorsque vous touchez une créature de taille G ou inférieure avec un jet d'attaque et lui infligez des dégâts, vous pouvez lui faire subir l'état À terre. Utilisations : votre bonus de maîtrise, récupérées au Repos long.",
+  'Saut des nuées': "Par une action Bonus, vous vous téléportez magiquement d'un maximum de 9 m dans un espace inoccupé que vous voyez. Utilisations : votre bonus de maîtrise, récupérées au Repos long.",
+  'Tonnerre des cieux': "Lorsque vous subissez des dégâts de la part d'une créature dans un rayon de 18 m, vous pouvez jouer votre Réaction pour lui infliger 1d8 dégâts de tonnerre. Utilisations : votre bonus de maîtrise, récupérées au Repos long.",
+  'Emplacements de sort': "Pour lancer un sort du 1er niveau ou supérieur, vous dépensez un emplacement d'un niveau au moins égal à celui du sort. Les sorts mineurs n'en demandent pas. Vous récupérez tous les emplacements dépensés en terminant un Repos long.",
+  'Magie de pacte': "Vos emplacements de Magie de pacte servent à lancer vos sorts d'Occultiste ; ils sont tous du même niveau (1er niveau au niveau 1). Vous récupérez tous les emplacements dépensés en terminant un Repos court ou long.",
+  'Marque du chasseur': "Ennemi juré : le sort marque du chasseur est toujours préparé. Vous pouvez le lancer deux fois sans dépenser d'emplacement de sort, et récupérez ces utilisations au Repos long."
+};
+// Description d'une ressource : la sienne, celle du SRD, ou celle du sort lancé « sans emplacement »
+function ressDesc(r){
+  if(r && typeof r.description === 'string' && r.description.trim()) return {texte:r.description};
+  const n = String(r && r.nom || '').trim(), nn = norm(n);
+  for(const k in RESS_SRD) if(nn === norm(k) || nn.startsWith(norm(k) + ' ') || nn.startsWith(norm(k) + '(')) return {texte:RESS_SRD[k], src:'SRD 5.2.1'};
+  const m = n.match(/^(.+?) sans emplacement$/i);
+  if(m){ const s = Object.keys(SORTS_SRD).find(k => norm(k) === norm(m[1]));
+    const t = `Vous pouvez lancer ${m[1].toLowerCase()} sans dépenser d'emplacement de sort, autant de fois qu'indiqué ici ; ces utilisations reviennent au Repos long. Vous pouvez aussi le lancer avec vos emplacements de sort.`;
+    return {texte: s ? t + '\n' + SORTS_SRD[s] : t, src:'SRD 5.2.1'}; }
+  return null;
+}
+let RES_POP = []; // ressources affichées, pour ouvrir leur description
+function showRess(n){
+  const x = RES_POP[n]; if(!x) return; const d = ressDesc(x.r); if(!d) return;
+  const pop = $('spellPop'); pop.classList.remove('etat', 'qr'); pop.setAttribute('aria-label', 'Détail de la ressource');
+  pop.innerHTML = `<button class="trayx" id="spellX" aria-label="Fermer">${svg('x')}</button><div class="kick">${h(x.qui)}${x.qui ? ' · ' : ''}Ressource</div><h3>${h(x.r.nom)}</h3>
+    ${d.texte.split('\n').map((l, k) => { const mm = k ? l.match(/^([^.]{2,40}\.)\s(.+)$/) : null; return mm ? `<p class="desc"><b>${h(mm[1])}</b> ${h(mm[2])}</p>` : `<p class="desc">${h(l)}</p>`; }).join('')}
+    ${d.src ? `<p class="src">Source : ${d.src}.</p>` : ''}`;
+  $('spellBg').classList.add('open'); pop.classList.add('open'); $('spellX').onclick = closeSpell;
+}
 function ressourcesHTML(x, i, lecture){
   const R = Array.isArray(x.ressources) ? x.ressources : []; if(!R.length) return '';
   const corps = `<div class="res">${R.map((r, k) => {
@@ -1389,7 +1435,9 @@ function ressourcesHTML(x, i, lecture){
       ? `<div class="pips">${Array.from({length:max}, (_, p) => lecture ? `<span class="pip ${p < reste ? 'on' : ''}"></span>`
           : `<button class="pip ${p < reste ? 'on' : ''}" data-res="${i}:${k}:${p}" aria-label="${h(r.nom)} : ${p < reste ? 'dépenser' : 'récupérer'}"></button>`).join('')}</div>`
       : `${lecture ? '' : `<button class="ring" data-resm="${i}:${k}:-1" aria-label="Dépenser">−</button>`}<span class="resnum">${reste} / ${max}</span>${lecture ? '' : `<button class="ring" data-resm="${i}:${k}:1" aria-label="Récupérer">+</button>`}`;
-    return `<div class="resrow"><b>${h(r.nom)}<small>${rec}</small></b>${ctl}</div>`; }).join('')}</div>`;
+    const d = ressDesc(r), n = d ? RES_POP.push({qui:x.nom, r}) - 1 : -1;
+    const nom = d ? `<button class="resinfo" data-resinfo="${n}" aria-label="${h(r.nom)} : description">${h(r.nom)}<span class="info">i</span><small>${rec}</small></button>` : `${h(r.nom)}<small>${rec}</small>`;
+    return `<div class="resrow"><b>${nom}</b>${ctl}</div>`; }).join('')}</div>`;
   return lecture ? `<div class="label">Ressources</div>${corps}` : sec('ressources', 'Ressources', corps, '· touchez pour dépenser');
 }
 /* ---------- jets contre la mort (à 0 PV) ---------- */
@@ -1905,6 +1953,7 @@ function bindCreateur(){
     GEN.comps = L; majCrea(); });
   document.querySelectorAll('#createur [data-fspell]').forEach(b => b.onclick = () => ficheSort(b));
   document.querySelectorAll('#createur [data-fichecopy]').forEach(b => b.onclick = () => ficheCopie(b));
+  document.querySelectorAll('#createur [data-resinfo]').forEach(b => b.onclick = () => showRess(+b.dataset.resinfo));
 }
 function ficheDe(cle){ return cle === 'g' ? creaFiche() : FICHES[+cle]; }
 function ficheSort(b){ const [i, j] = b.dataset.fspell.split(':'); const x = ficheDe(i), o = x && x.sorts[+j]; if(!o) return;
@@ -1969,6 +2018,7 @@ function render(){
 }
 function draw(){
   const app = document.getElementById('app');
+  RES_POP = [];
   const y = window.scrollY;
   app.innerHTML = renderSky() + renderGroupe()
     + `<div class="grid2">${renderCarte()}${renderQuetes()}</div>`
@@ -2100,6 +2150,7 @@ function bind(){
   document.querySelectorAll('[data-fiche]').forEach(b => b.onclick = () => { const i = +b.dataset.fiche; ficheSel = ficheSel === i ? null : i; render(); });
   document.querySelectorAll('[data-fspell]').forEach(b => b.onclick = () => ficheSort(b));
   document.querySelectorAll('[data-fichecopy]').forEach(b => b.onclick = () => ficheCopie(b));
+  document.querySelectorAll('[data-resinfo]').forEach(b => b.onclick = () => showRess(+b.dataset.resinfo));
   bindCreateur();
   on('qrTop', montrerQR);
   on('qrBtn', montrerQR);
