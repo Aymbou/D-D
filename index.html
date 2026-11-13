@@ -920,7 +920,7 @@ function ficheHTML(x, i){
   const tags = L => `<div class="tags">${L.map(t => `<span class="tag">${t}</span>`).join('')}</div>`;
   const kv = [['PV', x.pvMax], ['CA', x.ca], ['Init.', sgn(x.initiative)], ['Vitesse', x.vitesse], ['Maîtrise', sgn(x.maitrise)]];
   const mineurs = x.sorts.filter(o => o.niveau === 0), n1 = x.sorts.filter(o => o.niveau !== 0);
-  const spells = L => `<div class="tags">${L.map(o => `<button class="tag spell" data-fspell="${i}:${x.sorts.indexOf(o)}">${h(o.nom)}<span class="info">i</span></button>`).join('')}</div>`;
+  const spells = L => `<div class="tags">${L.map(o => `<button class="tag spell" data-fspell="${i}:${x.sorts.indexOf(o)}"><span class="nv">${h(niveauSort(o.niveau, true))}</span>${h(o.nom)}<span class="info">i</span></button>`).join('')}</div>`;
   return `<div class="sheet"><div class="in">
       <div class="head" style="--hc:${col}">${avatar(x, i)}<div><h3>${h(x.nom)}</h3><p>${h(x.classe)} · niveau 1</p></div></div>
       <div class="body">
