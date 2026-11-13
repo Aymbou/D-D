@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0d0a07">
 <title>Chroniques – Table de jeu</title>
-<meta name="version" content="1.12.0">
+<meta name="version" content="1.12.1">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-title" content="Chroniques">
@@ -394,7 +394,7 @@ button.bar.hpbar:active{transform:scale(.99)}
 .hpctl .r2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .hpctl .r2 .act{width:100%}
 @media (prefers-reduced-motion:reduce){.hpwrap{transition:none}}
-.version{margin:18px 0 0;text-align:center;font-family:var(--display);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink2)}
+.version{margin:10px 0 0;text-align:center;font-family:var(--display);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink2)}
 body.sous-barre .toast,body.sous-barre .errbox{top:var(--notif-top)}
 .toast,.errbox{transition:transform .25s,top .25s,visibility 0s}
 .toast:not(.show),.errbox:not(.show){visibility:hidden;transition:transform .25s,top .25s,visibility 0s .25s}
@@ -508,7 +508,7 @@ html,body{overscroll-behavior-y:contain}
    - CORRECTIF : +1 pour une simple correction ;
    - MAJEUR : changement qui casse les anciens liens ou sauvegardes.
    Penser à changer aussi <meta name="version"> en haut du fichier. */
-const VERSION = '1.12.0', VERSION_DATE = '13/11/2026';
+const VERSION = '1.12.1', VERSION_DATE = '13/11/2026';
 const KEY = 'chroniques.etat.v1', KEY_OPT = 'chroniques.options.v1';
 const TABS = [['groupe','Groupe'],['carte','Carte'],['quetes','Quêtes'],['recit','Récit'],['monde','Monde'],['regles','Règles']];
 
@@ -1520,8 +1520,8 @@ function renderRegles(){
       </ul>
       <p style="font-size:16px;color:var(--ink2)">Format des liens : <code>#etat={…}</code> remplace toute la partie, <code>#maj={…}</code> modifie seulement ce qui est indiqué (héros, ennemis, quêtes, lieux et ressources sont retrouvés par leur nom ; portrait dessiné d'après la race et la classe trouvées dans <code>classe</code> (ou les champs <code>race</code> et <code>genre</code> : <code>"f"</code> ou <code>"m"</code> ; <code>"portrait":false</code> garde l'emblème) ; or d'un héros : <code>"or":29</code> ; objet en plusieurs exemplaires : <code>{"nom":"Flèches","qte":20}</code> ; jets contre la mort à 0 PV : <code>"jetsMort":{"reussites":1,"echecs":2,"stable":false}</code> ; ressource d'un héros : <code>{"nom":"Rage","max":2,"reste":1,"repos":"long","court":1}</code>, où <code>repos</code> vaut <code>court</code> ou <code>long</code> et <code>court</code> est le nombre d'utilisations rendues par un repos court ; <code>"journal+":[…]</code> ajoute une entrée ; <code>"supprimer":true</code> retire un élément).</p>
     </div>
-    <p class="version">Chroniques · version ${VERSION} du ${VERSION_DATE}</p>
-    <div class="btnrow" style="justify-content:center;margin-top:6px"><button class="btn" id="rechargerBtn">Recharger l'appli</button></div>`);
+    <div class="btnrow" style="justify-content:center;margin-top:18px"><button class="btn" id="rechargerBtn">Recharger l'appli</button></div>
+    <p class="version">Chroniques · version ${VERSION} du ${VERSION_DATE}</p>`);
 }
 
 function render(){
