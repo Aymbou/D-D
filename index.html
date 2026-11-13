@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0d0a07">
 <title>Chroniques – Table de jeu</title>
-<meta name="version" content="1.12.1">
+<meta name="version" content="1.13.0">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-title" content="Chroniques">
@@ -324,6 +324,29 @@ nav.tabs button.on svg{filter:drop-shadow(0 0 4.3px rgba(217,178,95,.6))}
 .toast.show{transform:translate(-50%,0)}
 @media (max-width:302.4px){body{font-size:12.2px}.parch>.in{padding:18.7px 13px}.cardtools{right:13px}.scenetext,.hint{font-size:16px}.hint svg{width:37.4px;height:37.4px}.med{width:60.5px}.med .av{width:50.4px;height:50.4px}nav.tabs button{font-size:7.6px}nav.tabs svg{width:19.4px;height:19.4px}}
 
+/* ---- table partagée : QR code ---- */
+.qrbox{display:block;width:min(56vw,200px);margin:10px auto 4px;padding:8px;border-radius:8px;background:#fff;border:1.5px solid var(--gold3);box-shadow:0 2px 8px rgba(0,0,0,.18)}
+.qrbox svg{display:block;width:100%;height:auto}
+.qrcap{margin:0 0 4px;text-align:center;font-size:13px;color:var(--ink2)}
+.spellpop.qr{border-top-color:var(--gold3);text-align:center}
+.spellpop.qr h3{color:var(--ink);margin-right:0}
+.spellpop.qr .qrbox{width:min(76vw,320px);margin:12px auto}
+.spellpop.qr .btnrow{justify-content:center}
+/* ---- créateur de personnage ---- */
+.crea .body{padding-top:12px}
+.creagrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.cf{display:block}
+.cf small{display:block;margin:0 0 4px;font-family:var(--display);font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ink3)}
+.cf select.field{padding:0 8px;appearance:auto}
+.creacar{display:grid;grid-template-columns:repeat(6,1fr);gap:5px}
+.creacar .cc{text-align:center}
+.creacar small{display:block;font-family:var(--display);font-size:10px;letter-spacing:.08em;color:var(--ink3)}
+.creacar .field{height:38px;padding:0 2px;text-align:center;font-size:16px}
+.creacar span{display:block;margin-top:3px;font-size:11.5px;color:var(--ink2);line-height:1.2}
+.creacar span b{font-family:var(--display);font-size:14px;color:var(--ink)}
+.tag.pick{cursor:pointer;color:var(--ink);font-size:13px}
+.tag.pick.on{background:var(--ink);color:var(--parch);border-color:var(--ink)}
+.creanote{margin:8px 0 0;font-size:13px;font-style:italic;color:var(--ink2)}
 /* ---- ressources, états, ma fiche, nouveautés ---- */
 .res{display:flex;flex-direction:column;gap:6px}
 .resrow{display:flex;align-items:center;gap:8px;padding:6px 8px 6px 11px;border:1.5px solid rgba(120,90,55,.35);border-radius:6px;background:rgba(255,250,236,.45)}
@@ -508,7 +531,7 @@ html,body{overscroll-behavior-y:contain}
    - CORRECTIF : +1 pour une simple correction ;
    - MAJEUR : changement qui casse les anciens liens ou sauvegardes.
    Penser à changer aussi <meta name="version"> en haut du fichier. */
-const VERSION = '1.12.1', VERSION_DATE = '13/11/2026';
+const VERSION = '1.13.0', VERSION_DATE = '13/11/2026';
 const KEY = 'chroniques.etat.v1', KEY_OPT = 'chroniques.options.v1';
 const TABS = [['groupe','Groupe'],['carte','Carte'],['quetes','Quêtes'],['recit','Récit'],['monde','Monde'],['regles','Règles']];
 
@@ -528,6 +551,7 @@ const I = {
   x:'<path d="M6 6l12 12M18 6L6 18"/>',
   chev:'<path d="M9 5l7 7-7 7"/>',
   undo:'<path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/>',
+  qr:'<path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4z"/><path d="M14 14h2.5v2.5H14zM17.5 17.5H20V20h-2.5zM14 19h1.5M19 14h1"/>',
   share:'<circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="M8.3 10.8l7.4-4.3M8.3 13.2l7.4 4.3"/>',
   plume:'<path d="M20 4C11 4 6 9.5 5 19c4-.5 7.5-2 10-5-2 0-3.5-.2-4.5-.8 3 0 5.5-1 7-3.5-1.5 0-2.8-.3-3.8-.8C17 7.6 19 6 20 4z"/><path d="M5 19l6-6"/>',
   haut:'<path d="M6 15l6-6 6 6"/>',
@@ -1176,6 +1200,7 @@ function renderSky(){
       <div class="pill ${saved?'':'off'}"><span class="dot"></span>${saved?'Sauvegardé':'Non sauvegardé'}</div>
       <div class="spacer"></div>
       <button class="round" id="undoBtn" aria-label="Annuler" ${undoStack.length?'':'disabled'}>${svg('undo')}</button>
+      ${SY.salle ? `<button class="round" id="qrTop" aria-label="QR code de la table partagée">${svg('qr')}</button>` : ''}
       <button class="round" id="shareBtn" aria-label="Partager la partie">${svg('share')}</button>
     </div>
     <h1 class="title" style="font-size:${titleSize(words)}px">${h(words)}</h1>
@@ -1321,7 +1346,7 @@ function showRegle(qui, titre, texte){
     ${texte.split('\n').map(l => `<p class="desc">${h(l)}</p>`).join('')}<p class="src">Source : SRD 5.2.1, « Dégâts et soins ».</p>`;
   $('spellBg').classList.add('open'); pop.classList.add('open'); $('spellX').onclick = closeSpell;
 }
-function closeSpell(){ $('spellBg').classList.remove('open'); $('spellPop').classList.remove('open'); }
+function closeSpell(){ $('spellBg').classList.remove('open'); $('spellPop').classList.remove('open', 'qr'); }
 /* ---------- sections repliables, compteurs (or, objets en plusieurs exemplaires) ---------- */
 const secOuverte = k => !(OPT.replies || []).includes(k);
 function sec(k, titre, corps, em){
@@ -1434,7 +1459,7 @@ const FICHES = [{"nom":"Grosha Brisecrâne","classe":"Orque barbare · Soldat","
 const SORTS_SRD = {"Assistance":"Vous touchez physiquement une créature consentante en choisissant une compétence. Jusqu’à la fin du sort, la créature ajoute 1d4 au résultat de tout test de caractéristique associé à cette compétence.","Flamme sacrée":"Une radiance embrasée s’abat sur une créature que vous voyez à portée. La cible doit réussir un jet de sauvegarde de Dextérité sous peine de subir 1d8 dégâts radiants. Les Abris partiels et supérieurs ne confèrent aucun bénéfice dans le cadre de ce jet de sauvegarde.\nAmélioration de sort mineur. Les dégâts augmentent de 1d8 lorsque vous atteignez les niveaux 5 (2d8), 11 (3d8) et 17 (4d8).","Thaumaturgie":"Vous engendrez une manifestation surnaturelle mineure. Vous créez l’un des effets magiques suivants à portée. Si vous lancez ce sort plusieurs fois, vous pouvez faire coexister jusqu’à trois de ces effets d’une minute.\nBruit fantôme. Vous faites émaner un son bref d’un point que vous choisissez à portée, comme un grondement de tonnerre, un croassement ou des murmures inquiétants.\nJeu avec le feu. Vous manipulez des flammes pendant 1 minute : elles vacillent, s’intensifient, s’atténuent ou changent de couleur.\nMain invisible. Vous provoquez l’ouverture soudaine d’une porte ou fenêtre non verrouillée ou la faites claquer.\nSecousse. Vous provoquez un léger tremblement de terre inoffensif pendant 1 minute.\nVoix retentissante. Votre voix retentit jusqu’à trois fois plus fort que la normale pendant 1 minute. Pour toute la durée, vous avez l’Avantage aux tests de Charisme (Intimidation).\nYeux modifiés. Vous altérez l’aspect de vos yeux pendant 1 minute.","Stabilisation":"Choisissez à portée une créature dotée de 0 point de vie, mais qui n’est pas morte. La créature est Stabilisée.\nAmélioration de sort mineur. La portée augmente lorsque vous atteignez les niveaux 5 (9 m), 11 (18 m) et 17 (36 m).","Lumière":"Vous touchez physiquement un objet de taille G ou inférieure qui n’est porté par personne d’autre. Jusqu’à la fin du sort, l’objet produit une Lumière vive sur un rayon de 6 m et une Lumière faible sur 6 m de plus. La lumière peut présenter les teintes de votre choix.\nRecouvrir l’objet d’une surface opaque bloque la lumière. Le sort prend fin si vous le relancez.","Résistance":"Vous touchez physiquement une créature consentante en choisissant un type de dégâts entre : acide, contondants, feu, foudre, froid, nécrotiques, perforants, poison, radiants, tonnerre et tranchants. Quand la créature subit des dégâts du type retenu avant la fin du sort, elle réduit les dégâts subis de 1d4. Une même créature ne peut bénéficier qu’une fois par tour de ce sort.","Bénédiction":"Vous bénissez jusqu’à trois créatures à portée. Chaque fois qu’une de ces cibles effectue un jet d’attaque ou un jet de sauvegarde avant la fin du sort, elle ajoute 1d4 au résultat correspondant.\nEmplacement de niveau supérieur. Vous pouvez cibler une créature supplémentaire par niveau d’emplacement au-delà du 1er.","Bouclier de la foi":"Un champ scintillant enveloppe une créature de votre choix à portée et lui octroie un bonus de +2 à la CA pour toute la durée.","Rayon traçant":"Vous projetez un trait de lumière vers une créature à portée. Effectuez une attaque de sort à distance contre la cible. Si l’attaque touche, la cible subit 4d6 dégâts radiants et le prochain jet d’attaque effectué contre elle avant la fin de votre tour suivant a l’Avantage.\nEmplacement de niveau supérieur. Les dégâts augmentent de 1d6 par niveau d’emplacement au-delà du 1er.","Soins":"La créature que vous touchez physiquement récupère un nombre de points de vie égal à 2d8 + votre modificateur de caractéristique d’incantation.\nEmplacement de niveau supérieur. Les soins augmentent de 2d8 par niveau d’emplacement au-delà du 1er.","Sanctuaire":"Vous protégez une créature à portée. Jusqu’à la fin du sort, toute créature qui cible la créature protégée avec un jet d’attaque ou un sort nuisible doit réussir un jet de sauvegarde de Sagesse, sans quoi elle doit choisir une autre cible pour ne pas perdre l’attaque ou le sort. Ce sort ne protège pas la créature contre les zones d’effet. Le sort prend fin pour la créature protégée si elle effectue un jet d’attaque, lance un sort ou inflige des dégâts.","Main du mage":"Une main spectrale et flottante apparaît en un point que vous choisissez à portée. La main persiste pour toute la durée. Elle disparaît si jamais elle se retrouve à plus de 9 m de vous ou si vous relancez ce sort.\nÀ l’incantation du sort, la main peut servir à manipuler un objet, à ouvrir une porte ou un récipient non verrouillés, à ranger ou récupérer un objet dans un conteneur ouvert ou à déverser le contenu d’une fiole.\nAu prix de l’action Magie à vos tours suivants, vous pouvez de nouveau contrôler ainsi la main. Dans le cadre de cette action, vous pouvez déplacer la main d’un maximum de 9 m.\nElle ne peut ni attaquer, ni activer d’objet magique, ni porter plus de 5 kg.","Rayon de givre":"Un rayon de lueur zébrée bleuâtre et glaciale file vers une créature à portée. Effectuez une attaque de sort à distance contre la cible. Si l’attaque touche, la cible subit 1d8 dégâts de froid et sa Vitesse est réduite de 3 m jusqu’au début de votre tour suivant.\nAmélioration de sort mineur. Les dégâts augmentent de 1d8 lorsque vous atteignez les niveaux 5 (2d8), 11 (3d8) et 17 (4d8).","Prestidigitation":"Vous produisez un effet magique à portée. Choisissez l’effet parmi les options ci-après. Si vous lancez ce sort plusieurs fois, vous pouvez faire coexister jusqu’à trois de ces effets non instantanés.\nEffet sensoriel. Vous produisez un effet sensoriel instantané et inoffensif, comme une pluie d’étincelles, une petite rafale de vent, quelques notes de musique ou une odeur étrange.\nJeu avec le feu. Vous allumez ou éteignez une bougie, une torche ou un petit feu de camp, en un instant.\nNettoyage ou maculage. Vous nettoyez ou souillez en un instant un objet dont le volume ne dépasse pas 30 litres (ou 0,03 m³).\nSensation mineure. Vous refroidissez, réchauffez ou parfumez de la matière inerte pendant 1 heure, à condition que son volume ne dépasse pas 30 litres (ou 0,03 m³).\nMarque magique. Vous faites apparaître pendant 1 heure, sur un objet ou une surface, une couleur, une petite marque ou un symbole.\nCréation mineure. Vous créez une babiole non magique ou une image illusoire qui tient dans votre main. Elle persiste jusqu’à la fin de votre tour suivant. Une telle babiole ne peut pas infliger de dégâts et n’a aucune valeur monétaire.","Trait de feu":"Vous projetez un grain enflammé vers une créature ou un objet à portée. Effectuez une attaque de sort à distance contre la cible. Si l’attaque touche, la cible subit 1d10 dégâts de feu. Tout objet inflammable touché par ce sort s’embrase s’il n’est pas porté.\nAmélioration de sort mineur. Les dégâts augmentent de 1d10 lorsque vous atteignez les niveaux 5 (2d10), 11 (3d10) et 17 (4d10).","Message":"Vous pointez le doigt vers une créature à portée et murmurez un message. La cible (et seulement elle) entend votre message et peut y répondre par un murmure audible de votre seule personne.\nVous pouvez lancer ce sort à travers des objets solides si vous connaissez la cible et savez qu’elle se trouve derrière ces obstacles. Le silence magique, 30 cm de pierre, de métal ou de bois, ou une simple feuille de plomb suffisent à bloquer le sort.","Armure du mage":"Vous touchez une créature consentante qui ne porte pas d’armure. Jusqu’à la fin du sort, sa CA de base est de 13 plus son modificateur de Dextérité. Le sort prend fin prématurément si la cible enfile une armure.","Projectile magique":"Vous créez trois traits de force magique et scintillante. Chaque projectile heurte une créature de votre choix parmi celles que vous voyez à portée. Un projectile inflige 1d4 + 1 dégâts de force à sa cible. Les traits frappent tous simultanément, sachant que vous pouvez viser une seule créature ou plusieurs.\nEmplacement de niveau supérieur. Le sort produit un trait supplémentaire par niveau d’emplacement au-delà du 1er.","Sommeil":"Chaque créature que vous choisissez dans une Sphère de 1,50 m centrée sur un point à portée doit réussir un jet de sauvegarde de Sagesse sous peine de subir l’état Neutralisé jusqu’à la fin de son tour suivant et de réitérer le JS à la fin de cet intervalle. Si la cible rate ce second JS, elle subit l’état Inconscient pour toute la durée. Le sort prend fin sur toute cible qui subit des dégâts ou qui reçoit une secousse énergique d’une autre créature située dans un rayon de 1,50 m d’elle.\nLes créatures qui ne dorment pas, comme les elfes, et celles qui ont l’Immunité contre l’Épuisement, réussissent automatiquement leur JS contre ce sort.","Vague tonnante":"Vous produisez une vague de force tonitruante. Chaque créature prise dans un Cube de 4,50 m émanant de vous effectue un jet de sauvegarde de Constitution. En cas d’échec, la créature subit 2d8 dégâts de tonnerre et le choc l’éloigne de 3 m de vous. En cas de réussite, elle subit uniquement la moitié de ces dégâts.\nEn outre, les objets non fixés entièrement compris dans le Cube sont automatiquement repoussés de 3 m de vous par le sort, dont le fracas s’entend à une distance de 90 m.\nEmplacement de niveau supérieur. Les dégâts augmentent de 1d8 par niveau d’emplacement au-delà du 1er.","Bouclier":"Une barrière imperceptible de force magique vous protège. Jusqu’au début de votre tour suivant, vous recevez un bonus de +5 à la CA, y compris contre l’attaque qui a déclenché le sort, et vous ne subissez aucun dégât de projectile magique.","Détection de la magie":"Pour toute la durée, vous percevez la présence des effets magiques dans un rayon de 9 m. Si vous percevez de tels effets, vous pouvez entreprendre l’action Magie pour voir une faible aura autour de chaque créature et objet visibles et porteurs de magie de la zone, et vous apprenez l’école de magie correspondante dans le cas d’un effet produit par un sort.\nLe sort est bloqué par 30 cm de pierre, de terre ou de bois, par 2,5 cm de métal (une simple feuille dans le cas du plomb).","Feuille morte":"Choisissez jusqu’à cinq créatures qui chutent à portée. La vitesse de chute de chacune passe à 18 m par round jusqu’à la fin du sort. Si la créature atterrit avant la fin du sort, elle ne subit aucun dégât de chute et le sort prend fin en ce qui la concerne.","Décharge occulte":"Vous projetez un rayon d’énergie crépitante. Effectuez une attaque de sort à distance contre une créature ou un objet à portée. Si l’attaque touche, la cible subit 1d10 dégâts de force.\nAmélioration de sort mineur. Le sort produit deux rayons au niveau 5, trois au niveau 11 et quatre au niveau 17. Vous pouvez viser la même cible avec ces rayons ou les répartir entre plusieurs cibles. Effectuez un jet d’attaque séparé pour chaque rayon.","Charme-personne":"Un Humanoïde que vous voyez à portée effectue un jet de sauvegarde de Sagesse. Ce jet s’effectue avec l’Avantage si vous ou vos alliés êtes en train de l’affronter. En cas d’échec, la cible subit l’état Charmé jusqu’à la fin du sort ou que vous ou vos alliés lui infligiez des dégâts. La créature ainsi Charmée vous est Amicale. Lorsque le sort prend fin, la cible sait que vous l’avez Charmée.\nEmplacement de niveau supérieur. Vous pouvez cibler une créature supplémentaire par niveau d’emplacement au-delà du 1er.","Maléfice":"Vous maudissez une créature que vous voyez à portée. Jusqu’à la fin du sort, vous infligez 1d6 dégâts nécrotiques supplémentaires à la cible chaque fois que vous la touchez avec un jet d’attaque. Vous désignez également une caractéristique à l’incantation. La cible subit le Désavantage aux tests de caractéristique associés à la caractéristique en question.\nSi la cible tombe à 0 point de vie avant la fin du sort, vous pouvez désigner une nouvelle cible à l’un de vos tours suivants, par une action Bonus.\nEmplacement de niveau supérieur. Votre Concentration peut persister plus longtemps avec un emplacement du 2e niveau (jusqu’à 4 heures), du 3e\n ou 4e\n (jusqu’à 8 heures), ou du 5e et supérieur (24 heures).","Marque du chasseur":"Vous désignez magiquement une créature que vous voyez à portée comme votre proie. Jusqu’à la fin du sort, vous infligez 1d6 dégâts de force à la cible chaque fois que vous la touchez avec un jet d’attaque. Vous avez aussi l’Avantage aux tests de Sagesse (Perception ou Survie) visant à la trouver.\nSi la cible tombe à 0 point de vie avant la fin du sort, vous pouvez par une action Bonus déplacer la marque vers une autre créature que vous voyez à portée.\nEmplacement de niveau supérieur. Votre Concentration peut persister plus longtemps avec un emplacement du 3e ou 4e niveau (jusqu’à 8 heures), ou du 5e\n et supérieur (24 heures).","Frappe piégeuse":"Alors que vous touchez la cible, des plantes grimpantes se matérialisent sur elle et elle effectue un jet de sauvegarde de Force. Si la créature est de taille G ou supérieure, elle a l’Avantage au jet. En cas d’échec, elle subit l’état Entravé jusqu’à la fin du sort. En cas de réussite, les plantes disparaissent en se flétrissant et le sort prend fin.\nTant qu’elle est Entravée, la cible subit 1d6 dégâts perforants au début de chacun de ses tours. La cible ou une créature à portée d’allonge de celle-ci peut entreprendre une action pour effectuer un test de Force (Athlétisme) contre votre DD de sauvegarde des sorts. En cas de réussite, le sort prend fin.\nEmplacement de niveau supérieur. Les dégâts augmentent de 1d6 par niveau d’emplacement au-delà du 1er.","Moquerie cruelle":"Vous adressez un chapelet d’insultes assaisonnées de subtils enchantements à une créature que vous voyez ou entendez à portée. La cible doit réussir un jet de sauvegarde de Sagesse sous peine de subir 1d6 dégâts psychiques, ainsi que le Désavantage à son prochain jet d’attaque intervenant avant la fin de son tour suivant.\nAmélioration de sort mineur. Les dégâts augmentent de 1d6 lorsque vous atteignez les niveaux 5 (2d6), 11 (3d6) et 17 (4d6).","Lumières dansantes":"Vous créez jusqu’à quatre lumières de la taille d’une torche, à portée ; pour toute la durée, elles ont l’aspect de torches, de lanternes ou de globes luisants qui flottent dans les airs. Au lieu de cela, vous pouvez fusionner les quatre lumières en forme luisante vaguement humaine, de taille M. Quelle que soit la forme choisie, chaque lueur émet une Lumière faible dans un rayon de 3 m.\nPar une action Bonus, vous pouvez déplacer les lueurs d’un maximum de 18 m vers un nouvel espace à portée. Chaque lueur du sort, à sa création, doit se situer dans un rayon de 6 m d’une autre, et s’évanouit si jamais elle quitte la portée du sort.","Réparation":"Ce sort répare une dégradation (déchirure ou bris) sur l’objet que vous touchez, comme un maillon de chaîne brisé, une clef en deux morceaux, une cape déchirée ou une outre percée. Tant que la dégradation ne dépasse pas 30 cm dans quelque dimension que ce soit, vous la réparez et il n’en reste nulle trace.\nCe sort peut réparer la structure physique d’un objet magique, mais il ne lui rendra pas sa magie.","Couleurs dansantes":"Vous projetez une gerbe éblouissante de lumière colorée. Chaque créature prise dans un Cône de 4,50 m émanant de vous doit réussir un jet de sauvegarde de Constitution sous peine de subir l’état Aveuglé jusqu’à la fin de votre tour suivant.","Mot de guérison":"La créature de votre choix parmi celles que vous voyez à portée récupère des points de vie : 2d4 + votre modificateur de caractéristique d’incantation.\nEmplacement de niveau supérieur. Les soins augmentent de 2d4 par niveau d’emplacement au-delà du 1er.","Murmures dissonants":"Une créature que vous choisissez parmi celles que vous voyez à portée perçoit intérieurement une mélodie discordante. La cible effectue un jet de sauvegarde de Sagesse. Elle subit 3d6 dégâts psychiques en cas d’échec et doit aussitôt jouer sa Réaction si disponible pour s’éloigner de vous autant qu’elle le peut, par le chemin le plus sûr. En cas de réussite, la cible subit uniquement la moitié de ces dégâts. Emplacement de niveau supérieur. Les dégâts augmentent de 1d6 par niveau d’emplacement au-delà du 1er.","Flammes":"Une flamme vacillante prend vie dans votre main et y persiste pour toute la durée. Tant qu’elles sont dans votre main, les flammes ne produisent pas de chaleur et n’embrasent rien, mais projettent une Lumière vive sur un rayon de 6 m et une Lumière faible sur 6 m de plus. Le sort prend fin si vous le relancez.\nJusqu’à la fin du sort, vous pouvez entreprendre l’action Magie pour projeter des flammes sur une créature ou un objet dans un rayon de 18 m. Effectuez une attaque de sort à distance. Si l’attaque touche, la cible subit 1d8 dégâts de feu.\nAmélioration de sort mineur. Les dégâts augmentent de 1d8 lorsque vous atteignez les niveaux 5 (2d8), 11 (3d8) et 17 (4d8).","Crosse des druides":"Le bois d’un gourdin ou d’un bâton de combat que vous tenez s’imprègne du pouvoir de la nature. Pour toute la durée, vous pouvez recourir à votre caractéristique d’incantation plutôt qu’à la Force pour les jets d’attaque et de dégâts de vos attaques de corps à corps effectuées avec cette arme. Le dé de dégâts de l’arme passe en outre à d8. Si l’attaque inflige des dégâts, il peut s’agir de dégâts de force ou des dégâts normaux de l’arme (à votre convenance).\nLe sort prend fin prématurément si vous le relancez ou si vous lâchez l’arme.\nAmélioration de sort mineur. Le dé de dégâts change lorsque vous atteignez les niveaux 5 (d10), 11 (d12) et 17 (2d6).","Druidisme":"Vous murmurez aux esprits de la nature pour créer l’un des effets suivants à portée :\nCapteur climatique. Vous produisez un effet sensoriel inoffensif de taille TP qui prédit le temps qu’il fera où vous vous trouvez dans les 24 prochaines heures. L’effet peut se manifester sous forme d’un globe doré pour un ciel dégagé, d’un nuage pour la pluie, de flocons qui tombent pour la neige, etc. Cet effet persiste pendant 1 round.\nFloraison. Vous faites instantanément s’épanouir une fleur, s’ouvrir une cosse de graines ou fleurir un bourgeon.\nEffet sensoriel. Vous créez un effet sensoriel inoffensif ; feuilles qui tombent, petites fées spectrales qui dansent, douce brise, bruit animal, vague odeur de sconse, etc. L’effet doit tenir dans un Cube de 1,50 m.\nJeu avec le feu. Vous allumez ou éteignez une bougie, une torche ou un petit feu de camp.","Amitié avec les animaux":"Ciblez une Bête que vous voyez à portée. La cible doit réussir un jet de sauvegarde de Sagesse sous peine de subir l’état Charmé pour toute la durée du sort. Si vous ou l’un de vos alliés infligez des dégâts à la cible, le sort prend fin.\nEmplacement de niveau supérieur. Vous pouvez affecter une Bête supplémentaire par niveau d’emplacement au-delà du 1er.","Lueurs féeriques":"Le contour des objets compris dans un Cube de 6 m à portée luit de bleu, de vert ou de violet, à votre convenance. Chaque créature prise dans le Cube est elle aussi nimbée si elle rate un jet de sauvegarde de Dextérité. Pour toute la durée, les objets et les créatures affectées projettent une Lumière faible sur un rayon de 3 m, et ne peuvent bénéficier de l’état Invisible.\nLes jets d’attaque contre une créature ou un objet affectés ont l’Avantage si l’assaillant voit la cible.","Communication avec les animaux":"Pour toute la durée, vous avez la faculté de comprendre les Bêtes et de communiquer verbalement avec elles, et toutes les options de compétence de l’action Influence vous sont accessibles avec elles.\nLa plupart des Bêtes ont peu à dire au-delà des sujets de survie et d’affection, mais toutes sont capables de vous informer sur les environs et les monstres locaux, notamment ce qu’elles ont perçu au cours de la dernière journée.","Éruption ensorcelée":"Vous projetez des énergies ensorcelées vers une créature ou un objet à portée. Effectuez une attaque de sort à distance contre la cible. Si l’attaque touche, la cible subit 1d8 dégâts du type choisi : acide, feu, foudre, froid, poison, psychiques ou tonnerre.\nSi vous obtenez un 8 sur un d8 du sort, vous pouvez en lancer un autre pour l’ajouter aux dégâts. Quand vous lancez ce sort, le maximum de d8 supplémentaires que vous pouvez ainsi ajouter aux dégâts du sort est égal à votre modificateur de caractéristique d’incantation.\nAmélioration de sort mineur. Les dégâts augmentent de 1d8 lorsque vous atteignez les niveaux 5 (2d8), 11 (3d8) et 17 (4d8).","Poigne électrique":"La foudre jaillit de vous vers une créature que vous tentez de toucher. Effectuez une attaque de sort au corps à corps contre la cible. Si l’attaque touche, la cible subit 1d8 dégâts de foudre et ne peut pas effectuer d’attaque d’Opportunité jusqu’au début de son tour suivant.\nAmélioration de sort mineur. Les dégâts augmentent de 1d8 lorsque vous atteignez les niveaux 5 (2d8), 11 (3d8) et 17 (4d8).","Mains brûlantes":"Une fine nappe de flammes jaillit de vous. Chaque créature prise dans un Cône de 4,50 m effectue un jet de sauvegarde de Dextérité et subit 3d6 dégâts de feu en cas d’échec, la moitié en cas de réussite.\nLes objets inflammables pris dans le Cône s’embrasent s’ils ne sont portés par personne.\nEmplacement de niveau supérieur. Les dégâts augmentent de 1d6 par niveau d’emplacement au-delà du 1er.","Héroïsme":"Une créature consentante que vous touchez est investie de vaillance. Jusqu’à la fin du sort, la créature est immunisée contre l’état Effrayé et reçoit autant de points de vie temporaires que votre modificateur de caractéristique d’incantation au début de chacun de ses tours.\nEmplacement de niveau supérieur. Vous pouvez cibler une créature supplémentaire par niveau d’emplacement au-delà du 1er.","Châtiment de fournaise":"Alors que vous touchez la cible, elle subit 1d6 dégâts de feu supplémentaires de l’attaque. Au début de chacun de ses tours jusqu’à la fin du sort, la cible subit 1d6 dégâts de feu et effectue un jet de sauvegarde de Constitution. En cas d’échec, le sort se poursuit. En cas de réussite, le sort prend fin.\nEmplacement de niveau supérieur. Tous les dégâts augmentent de 1d6 par niveau d’emplacement au-delà du 1er."};
 let ficheSel = null;
 function partieVide(){ return !S.heros.length && !S.scene.titre && !S.scene.texte; }
-function ficheHTML(x, i){
+function ficheHTML(x, i, cle = i){
   const col = heroColor(x) || PALETTE[i % PALETTE.length];
   const car = x.carac || {}, CK = ['FOR','DEX','CON','INT','SAG','CHA'];
   const estJS = a => /^JS\b/.test(a.nom);
@@ -1442,7 +1467,7 @@ function ficheHTML(x, i){
   const tags = L => `<div class="tags">${L.map(t => `<span class="tag">${t}</span>`).join('')}</div>`;
   const kv = [['PV', x.pvMax], ['CA', x.ca], ['Init.', sgn(x.initiative)], ['Vitesse', x.vitesse], ['Maîtrise', sgn(x.maitrise)]];
   const mineurs = x.sorts.filter(o => o.niveau === 0), n1 = x.sorts.filter(o => o.niveau !== 0);
-  const spells = L => `<div class="tags">${L.map(o => `<button class="tag spell" data-fspell="${i}:${x.sorts.indexOf(o)}"><span class="nv">${h(niveauSort(o.niveau, true))}</span>${h(o.nom)}<span class="info">i</span></button>`).join('')}</div>`;
+  const spells = L => `<div class="tags">${L.map(o => `<button class="tag spell" data-fspell="${cle}:${x.sorts.indexOf(o)}"><span class="nv">${h(niveauSort(o.niveau, true))}</span>${h(o.nom)}<span class="info">i</span></button>`).join('')}</div>`;
   return `<div class="sheet"><div class="in">
       <div class="head" style="--hc:${col}">${avatar(x, i)}<div><h3>${h(x.nom)}</h3><p>${h(x.classe)} · niveau 1</p></div></div>
       <div class="body">
@@ -1456,7 +1481,7 @@ function ficheHTML(x, i){
         ${n1.length ? `<div class="label">Sorts du 1er niveau <em>· touchez pour le détail</em></div>${spells(n1)}` : ''}
         <div class="label">Besace${x.or != null ? ` <em>· bourse : ${h(x.or)} po</em>` : ''}</div><p class="invline">${x.inventaire.map(o => `<span>${h(o)}</span>`).join('')}</p>
         <div class="label">Capacités</div><p class="notes">${h(x.notes)}</p>
-        <div class="btnrow"><button class="btn" data-fichecopy="${i}">Copier la fiche</button></div>
+        <div class="btnrow"><button class="btn" data-fichecopy="${cle}">Copier la fiche</button></div>
       </div></div></div>`;
 }
 function renderFiches(){
@@ -1471,6 +1496,421 @@ function renderFiches(){
     ${ficheSel !== null ? `<div class="sheets">${ficheHTML(FICHES[ficheSel], ficheSel)}</div>` : ''}
   </section>`;
 }
+
+/* ---------- créateur de personnage (niveau 1, SRD 5.2.1) ----------
+   Espèce, classe et historique au choix ; tout le reste est calculé selon les règles :
+   valeurs standard par classe, bonus d'historique (+2/+1), PV, CA, compétences, attaques, sorts recommandés. */
+const CREA = (() => {
+  const CK = ['FOR','DEX','CON','INT','SAG','CHA'];
+  const CNOM = {FOR:'Force', DEX:'Dextérité', CON:'Constitution', INT:'Intelligence', SAG:'Sagesse', CHA:'Charisme'};
+  const COMP = {'Acrobaties':'DEX','Arcanes':'INT','Athlétisme':'FOR','Discrétion':'DEX','Dressage':'SAG','Escamotage':'DEX','Histoire':'INT',
+    'Intimidation':'CHA','Intuition':'SAG','Investigation':'INT','Médecine':'SAG','Nature':'INT','Perception':'SAG','Persuasion':'CHA',
+    'Religion':'INT','Représentation':'CHA','Survie':'SAG','Tromperie':'CHA'};
+  // armes : dé, type, finesse, lancer / distance, polyvalente, botte
+  const ARMES = {
+    'Bâton de combat':{d:'1d6', t:'contondants', poly:'1d8', botte:'Renversement'},
+    'Dague':{d:'1d4', t:'perforants', fin:1, lancer:'6/18', botte:'Coup double'},
+    'Hachette':{d:'1d6', t:'tranchants', lancer:'6/18', botte:'Ouverture'},
+    'Javeline':{d:'1d6', t:'perforants', lancer:'9/36', botte:'Ralentissement'},
+    'Lance':{d:'1d6', t:'perforants', lancer:'6/18', poly:'1d8', botte:'Sape'},
+    "Masse d'armes":{d:'1d6', t:'contondants', botte:'Sape'},
+    'Serpe':{d:'1d4', t:'tranchants', botte:'Coup double'},
+    'Arc court':{d:'1d6', t:'perforants', dist:'24/96', botte:'Ouverture'},
+    'Cimeterre':{d:'1d6', t:'tranchants', fin:1, botte:'Coup double'},
+    'Épée à deux mains':{d:'2d6', t:'tranchants', botte:'Écorchure'},
+    'Épée courte':{d:'1d6', t:'perforants', fin:1, botte:'Ouverture'},
+    'Épée longue':{d:'1d8', t:'tranchants', poly:'1d10', botte:'Sape'},
+    "Fléau d'armes":{d:'1d8', t:'contondants', botte:'Sape'},
+    'Hache à deux mains':{d:'1d12', t:'tranchants', botte:'Enchaînement'},
+    'Arc long':{d:'1d8', t:'perforants', dist:'45/180', botte:'Ralentissement'}
+  };
+  const ARMURES = {cuir:['Armure de cuir', d => 11 + d], clout:['Armure de cuir clouté', d => 12 + d], chemise:['Chemise de mailles', d => 13 + Math.min(2, d)], cotte:['Cotte de mailles', () => 16]};
+  const SORTS_ATTAQUE = ['Rayon de givre','Trait de feu','Décharge occulte','Flammes','Éruption ensorcelée','Poigne électrique','Crosse des druides','Rayon traçant'];
+  const S = (c, p, x) => Object.assign({c, p}, x || {});
+  const CLASSES = {
+    barbare:{nom:'Barbare', dv:12, js:['FOR','CON'], n:2, comp:['Athlétisme','Dressage','Intimidation','Nature','Perception','Survie'],
+      std:{FOR:15,DEX:13,CON:14,INT:10,SAG:12,CHA:8}, sansArmure:'CON', couleur:'rouge',
+      equip:["Hache à deux mains","4 hachettes","Paquetage d'explorateur"], po:15, armes:['Hache à deux mains','Hachette'], bottes:2,
+      ress:() => [{nom:'Rage', max:2, reste:2, court:1}],
+      notes:() => "Rage 2/2 (action Bonus, sans armure lourde) : +2 dégâts sur les attaques de Force, Résistance aux dégâts contondants, perforants et tranchants, Avantage aux tests et JS de Force. Défense sans armure (10 + Dex + Con)."},
+    barde:{nom:'Barde', dv:8, js:['DEX','CHA'], n:3, comp:Object.keys(COMP), std:{FOR:8,DEX:14,CON:12,INT:13,SAG:10,CHA:15}, armure:'cuir', couleur:'rose',
+      equip:['Armure de cuir','2 dagues','Luth',"Paquetage d'artiste"], po:19, armes:['Dague'], outils:'luth, flûte, tambour (3 instruments au choix)',
+      sorts:{car:'CHA', mineurs:['Lumières dansantes','Moquerie cruelle'], prep:['Charme-personne','Couleurs dansantes','Mot de guérison','Murmures dissonants'], empl:2},
+      ress:c => [{nom:'Inspiration bardique', max:Math.max(1, mod(c.CHA)), reste:Math.max(1, mod(c.CHA))}],
+      notes:c => `Inspiration bardique d6 : ${Math.max(1, mod(c.CHA))}/${Math.max(1, mod(c.CHA))} (action Bonus, une créature à 18 m ajoute le dé à un Test d20 raté).`},
+    clerc:{nom:'Clerc', dv:8, js:['SAG','CHA'], n:2, comp:['Histoire','Intuition','Médecine','Persuasion','Religion'], std:{FOR:14,DEX:8,CON:13,INT:10,SAG:15,CHA:12},
+      armure:'chemise', bouclier:1, couleur:'or', equip:['Chemise de mailles','Bouclier',"Masse d'armes",'Symbole sacré',"Paquetage d'ecclésiastique"], po:7, armes:["Masse d'armes"],
+      sorts:{car:'SAG', mineurs:['Assistance','Flamme sacrée','Thaumaturgie'], prep:['Bénédiction','Bouclier de la foi','Rayon traçant','Soins'], empl:2},
+      options:{titre:'Ordre divin', liste:[
+        {id:'thaumaturge', nom:'Thaumaturge', mineur:['Stabilisation','Lumière','Résistance'], bonus:['Arcanes','Religion'], note:c => `Thaumaturge : un sort mineur de plus et ${sgn(Math.max(1, mod(c.SAG)))} aux tests d'Arcanes et de Religion (compris).`},
+        {id:'protecteur', nom:'Protecteur', note:() => 'Protecteur : maîtrise des armes de guerre et formation aux armures lourdes.'}]},
+      ress:() => [], notes:() => ''},
+    druide:{nom:'Druide', dv:8, js:['INT','SAG'], n:2, comp:['Arcanes','Dressage','Intuition','Médecine','Nature','Perception','Religion','Survie'], std:{FOR:8,DEX:12,CON:14,INT:13,SAG:15,CHA:10},
+      armure:'cuir', bouclier:1, couleur:'vert', equip:['Armure de cuir','Bouclier','Serpe','Bâton de combat (focaliseur druidique)',"Paquetage d'explorateur","Matériel d'herboriste"], po:9,
+      armes:['Bâton de combat','Serpe'], outils:"matériel d'herboriste", langues:'druidique',
+      sorts:{car:'SAG', mineurs:['Druidisme','Flammes'], prep:['Amitié avec les animaux','Lueurs féeriques','Soins','Vague tonnante'], toujours:['Communication avec les animaux'], empl:2},
+      options:{titre:'Ordre primitif', liste:[
+        {id:'mage', nom:'Mage', mineur:['Crosse des druides','Assistance','Message'], bonus:['Arcanes','Nature'], note:c => `Ordre primitif Mage : un sort mineur de plus et ${sgn(Math.max(1, mod(c.SAG)))} aux tests d'Arcanes et de Nature (compris).`},
+        {id:'gardien', nom:'Gardien', note:() => 'Ordre primitif Gardien : maîtrise des armes de guerre et formation aux armures intermédiaires.'}]},
+      ress:() => [], notes:() => 'Druidique : Communication avec les animaux toujours préparée.'},
+    ensorceleur:{nom:'Ensorceleur', dv:6, js:['CON','CHA'], n:2, comp:['Arcanes','Intimidation','Intuition','Persuasion','Religion','Tromperie'], std:{FOR:10,DEX:13,CON:14,INT:8,SAG:12,CHA:15},
+      couleur:'rouge', equip:['Lance','2 dagues','Cristal (focaliseur arcanique)',"Paquetage d'exploration souterraine"], po:28, armes:['Lance','Dague'],
+      sorts:{car:'CHA', mineurs:['Éruption ensorcelée','Lumière','Poigne électrique','Prestidigitation'], prep:['Détection de la magie','Mains brûlantes'], empl:2},
+      ress:() => [{nom:'Sorcellerie innée', max:2, reste:2}],
+      notes:() => "Sorcellerie innée 2/2 : action Bonus, 1 minute, DD de sauvegarde des sorts d'Ensorceleur +1 et Avantage à leurs jets d'attaque."},
+    guerrier:{nom:'Guerrier', dv:10, js:['FOR','CON'], n:2, comp:['Acrobaties','Athlétisme','Dressage','Histoire','Intuition','Intimidation','Perception','Persuasion','Survie'],
+      std:{FOR:15,DEX:14,CON:13,INT:8,SAG:10,CHA:12}, couleur:'gris', defense:1, bottes:3,
+      options:{titre:'Équipement de départ', liste:[
+        {id:'A', nom:'A : cotte de mailles, armes lourdes', armure:'cotte', equip:['Cotte de mailles','Épée à deux mains',"Fléau d'armes",'8 javelines',"Paquetage d'exploration souterraine"], po:4, armes:['Épée à deux mains',"Fléau d'armes",'Javeline']},
+        {id:'B', nom:'B : cuir clouté, arc long', armure:'clout', std:{FOR:14,DEX:15}, equip:['Armure de cuir clouté','Cimeterre','Épée courte','Arc long et 20 flèches','Carquois',"Paquetage d'exploration souterraine"], po:11, armes:['Arc long','Épée courte','Cimeterre']}]},
+      ress:() => [{nom:'Second souffle', max:2, reste:2, court:1}],
+      notes:() => "Style de combat : Défense (+1 CA avec une armure, compris). Second souffle 2/2 : action Bonus, 1d10+1 PV."},
+    magicien:{nom:'Magicien', dv:6, js:['INT','SAG'], n:2, comp:['Arcanes','Histoire','Intuition','Investigation','Médecine','Nature','Religion'], std:{FOR:8,DEX:12,CON:13,INT:15,SAG:14,CHA:10},
+      couleur:'violet', equip:['2 dagues','Bâton de combat (focaliseur arcanique)','Robe','Grimoire',"Paquetage d'érudit"], po:5, armes:['Dague'],
+      sorts:{car:'INT', mineurs:['Lumière','Main du mage','Rayon de givre'], prep:['Armure du mage','Projectile magique','Sommeil','Vague tonnante'], grimoire:['Détection de la magie','Feuille morte'], empl:2},
+      ress:() => [{nom:'Restauration magique', max:1, reste:1}],
+      notes:(c, x) => `Grimoire : les sorts préparés, plus Détection de la magie et Feuille morte. Armure du mage : CA ${13 + mod(c.DEX)}. Savoir rituel, Restauration magique 1/1 (repos court : récupère 1 emplacement de niv. 1).`},
+    moine:{nom:'Moine', dv:8, js:['FOR','DEX'], n:2, comp:['Acrobaties','Athlétisme','Discrétion','Histoire','Intuition','Religion'], std:{FOR:12,DEX:15,CON:13,INT:10,SAG:14,CHA:8},
+      sansArmure:'SAG', moine:1, couleur:'turquoise', equip:['Lance','5 dagues','Flûte',"Paquetage d'explorateur"], po:11, armes:['Mains nues','Lance','Dague'], outils:'flûte',
+      ress:() => [], notes:() => "Arts martiaux : dé 1d6, Dextérité pour toucher, attaque à mains nues en plus par action Bonus. Défense sans armure (10 + Dex + Sag)."},
+    occultiste:{nom:'Occultiste', dv:8, js:['SAG','CHA'], n:2, comp:['Arcanes','Histoire','Intimidation','Investigation','Nature','Religion','Tromperie'], std:{FOR:8,DEX:14,CON:13,INT:12,SAG:10,CHA:15},
+      armure:'cuir', ombres:1, couleur:'violet', equip:['Armure de cuir','Serpe','2 dagues','Orbe (focaliseur arcanique)','Livre (savoir occulte)',"Paquetage d'érudit"], po:15, armes:['Serpe','Dague'],
+      sorts:{car:'CHA', mineurs:['Décharge occulte','Prestidigitation'], prep:['Charme-personne','Maléfice'], pacte:1},
+      ress:() => [],
+      notes:c => `Magie de pacte : 1 emplacement de niv. 1, récupéré au repos court. Manifestation occulte : Armure d'ombres (Armure du mage sur soi sans emplacement : CA ${13 + mod(c.DEX)}, comprise ; ${11 + mod(c.DEX)} avec l'armure de cuir).`},
+    paladin:{nom:'Paladin', dv:10, js:['SAG','CHA'], n:2, comp:['Athlétisme','Intimidation','Intuition','Médecine','Persuasion','Religion'], std:{FOR:15,DEX:10,CON:13,INT:8,SAG:12,CHA:14},
+      armure:'cotte', bouclier:1, couleur:'or', bottes:2, equip:['Cotte de mailles','Bouclier','Épée longue','6 javelines','Symbole sacré',"Paquetage d'ecclésiastique"], po:9, armes:['Épée longue','Javeline'],
+      sorts:{car:'CHA', mineurs:[], prep:['Héroïsme','Châtiment de fournaise'], empl:2},
+      ress:() => [{nom:'Imposition des mains (PV)', max:5, reste:5}],
+      notes:() => "Imposition des mains : réserve de 5 PV (action Bonus ; 5 PV de la réserve suppriment l'état Empoisonné)."},
+    rodeur:{nom:'Rôdeur', dv:10, js:['FOR','DEX'], n:3, comp:['Athlétisme','Discrétion','Dressage','Intuition','Investigation','Nature','Perception','Survie'], std:{FOR:12,DEX:15,CON:13,INT:8,SAG:14,CHA:10},
+      armure:'clout', couleur:'vert', bottes:2, equip:['Armure de cuir clouté','Cimeterre','Épée courte','Arc long et 20 flèches','Carquois','Focaliseur druidique (branche de gui)',"Paquetage d'explorateur"], po:7,
+      armes:['Arc long','Épée courte','Cimeterre'],
+      sorts:{car:'SAG', mineurs:[], prep:['Frappe piégeuse','Soins'], toujours:['Marque du chasseur'], empl:2},
+      ress:() => [{nom:'Marque du chasseur sans emplacement', max:2, reste:2}],
+      notes:() => 'Ennemi juré : Marque du chasseur toujours préparée, 2 fois gratuite par repos long.'},
+    roublard:{nom:'Roublard', dv:8, js:['DEX','INT'], n:4, comp:['Acrobaties','Athlétisme','Discrétion','Escamotage','Intimidation','Intuition','Investigation','Perception','Persuasion','Tromperie'],
+      std:{FOR:12,DEX:15,CON:13,INT:14,SAG:10,CHA:8}, armure:'cuir', couleur:'noir', bottes:2, expertise:2,
+      equip:['Armure de cuir','2 dagues','Épée courte','Arc court et 20 flèches','Carquois','Outils de voleur','Paquetage de cambrioleur'], po:8, armes:['Épée courte','Dague','Arc court'],
+      outils:'outils de voleur', langues:'argot des voleurs, une langue de plus',
+      ress:() => [], notes:() => "Attaque sournoise : +1d6 une fois par tour (arme Finesse ou à distance, avec Avantage ou un allié à 1,50 m de la cible)."}
+  };
+  const DRAGONS = [['airain',"d'airain",'feu'],['argent',"d'argent",'froid'],['blanc','blanc','froid'],['bleu','bleu','foudre'],['bronze','de bronze','foudre'],
+    ['cuivre','de cuivre','acide'],['noir','noir','acide'],['or',"d'or",'feu'],['rouge','rouge','feu'],['vert','vert','poison']];
+  const GOLIATHS = [
+    ['feu','Brûlure ignée','géants du feu','+1d10 dégâts de feu quand vous touchez une cible avec un jet d\'attaque'],
+    ['pierre','Endurance de la pierre','géants des pierres',c => `Réaction quand vous subissez des dégâts : réduit les dégâts de 1d12${dm(mod(c.CON))}`],
+    ['givre','Froid mordant','géants du givre','+1d6 dégâts de froid et Vitesse de la cible −3 m quand vous touchez avec un jet d\'attaque'],
+    ['collines','Renversement des coteaux','géants des collines','la créature touchée (taille G ou moins) subit l\'état À terre'],
+    ['nuages','Saut des nuées','géants des nuages','action Bonus : téléportation de 9 m'],
+    ['tempetes','Tonnerre des cieux','géants des tempêtes','Réaction quand une créature à 18 m vous inflige des dégâts : 1d8 dégâts de tonnerre']];
+  const ESPECES = {
+    drakeide:{nom:'Drakéide', fem:'Drakéide', vit:'9 m', vision:18, variantes:DRAGONS.map(([id, de, t]) => ({id, nom:`Dragon ${de}`, label:`Drakéide ${de}`, t})),
+      ress:(c, pb) => [{nom:'Souffle', max:pb, reste:pb}],
+      notes:(c, pb, v) => `Souffle ${pb}/${pb} (remplace une attaque : cône 4,50 m ou ligne 9 m, 1d10 ${v.t}, JS Dex DD ${8 + mod(c.CON) + pb}), résistance ${v.t === 'foudre' ? 'à la foudre' : v.t === 'acide' ? "à l'acide" : 'au ' + v.t}, vision dans le noir 18 m.`},
+    elfe:{nom:'Elfe', fem:'Elfe', vit:'9 m', sens:['Perception','Intuition','Survie'],
+      variantes:[{id:'haut', nom:'Haut-elfe', label:'Haut-elfe', mineur:'Prestidigitation', vision:18},
+        {id:'sylvestre', nom:'Elfe sylvestre', label:'Elfe sylvestre', mineur:'Druidisme', vit:'10,50 m', vision:18},
+        {id:'drow', nom:'Drow', label:'Drow', mineur:'Lumières dansantes', vision:36}],
+      notes:(c, pb, v, sk) => `${v.nom} : ${v.mineur}${v.vit ? `, Vitesse ${v.vit}` : ''}, Ascendance féerique (Avantage contre l'état Charmé), Transe, Sens aiguisés (${sk}), vision dans le noir ${v.vision} m.`},
+    gnome:{nom:'Gnome', fem:'Gnome', vit:'9 m', taille:'P',
+      variantes:[{id:'roches', nom:'Gnome des roches', label:'Gnome des roches', mineurs:['Prestidigitation','Réparation']},
+        {id:'forets', nom:'Gnome des forêts', label:'Gnome des forêts', mineurs:['Illusion mineure'], toujours:['Communication avec les animaux']}],
+      ress:(c, pb, v) => v.id === 'forets' ? [{nom:'Communication avec les animaux sans emplacement', max:pb, reste:pb}] : [],
+      notes:(c, pb, v) => `${v.nom}, taille P : ${v.id === 'roches' ? 'Prestidigitation, Réparation, petits appareils mécaniques' : `Illusion mineure, Communication avec les animaux (${pb} fois gratuite par repos long)`}, Ruse gnome (Avantage aux JS d'Int, Sag et Cha), vision dans le noir 18 m.`},
+    goliath:{nom:'Goliath', fem:'Goliath', vit:'10,50 m', variantes:GOLIATHS.map(([id, nom, geants, txt]) => ({id, nom:`${nom} (${geants})`, label:'Goliath', pouvoir:nom, txt})),
+      ress:(c, pb, v) => [{nom:v.pouvoir, max:pb, reste:pb}],
+      notes:(c, pb, v) => `Goliath : ${v.pouvoir} ${pb}/${pb} (${typeof v.txt === 'function' ? v.txt(c) : v.txt}), Forte carrure, Vitesse 10,50 m.`},
+    halfelin:{nom:'Halfelin', fem:'Halfeline', vit:'9 m', taille:'P',
+      notes:() => 'Halfelin, taille P : Chance (relance les 1 au d20), Brave, Agilité halfeline, Discrétion naturelle.'},
+    humain:{nom:'Humain', fem:'Humaine', vit:'9 m', competent:1, don:1,
+      ress:() => [{nom:'Inspiration héroïque', max:1, reste:1}],
+      notes:(c, pb, v, sk) => `Humain : Ingénieux (Inspiration héroïque à chaque repos long), Compétent (${sk}).`},
+    nain:{nom:'Nain', fem:'Naine', vit:'9 m', pv:1,
+      ress:(c, pb) => [{nom:'Connaissance de la pierre', max:pb, reste:pb}],
+      notes:(c, pb) => `Nain : Ténacité naine (+1 PV, compris), résistance au poison, Connaissance de la pierre ${pb}/${pb}, vision dans le noir 36 m.`},
+    orc:{nom:'Orc', fem:'Orque', vit:'9 m',
+      ress:(c, pb) => [{nom:"Poussée d'adrénaline", max:pb, reste:pb, repos:'court'}],
+      notes:(c, pb) => `Orc : Acharnement (une fois par repos long, 1 PV au lieu de 0), Poussée d'adrénaline ${pb}/${pb} (Pointe par une action Bonus, ${pb} PV temporaires), vision dans le noir 36 m.`},
+    tieffelin:{nom:'Tieffelin', fem:'Tieffeline', vit:'9 m',
+      variantes:[{id:'infernal', nom:'Héritage infernal', label:'Tieffelin', mineur:'Trait de feu', res:'au feu'},
+        {id:'abyssal', nom:'Héritage abyssal', label:'Tieffelin', mineur:'Bouffée de poison', res:'au poison'},
+        {id:'chtonien', nom:'Héritage chtonien', label:'Tieffelin', mineur:'Contact glacial', res:'aux dégâts nécrotiques'}],
+      notes:(c, pb, v) => `Tieffelin, ${v.nom.toLowerCase()} : résistance ${v.res}, ${v.mineur}, Thaumaturgie, vision dans le noir 18 m.`}
+  };
+  const HISTORIQUES = {
+    acolyte:{nom:'Acolyte', car:['INT','SAG','CHA'], don:'initie-clerc', comp:['Intuition','Religion'], outils:'matériel de calligraphe',
+      equip:['Matériel de calligraphe','Livre de prières','Symbole sacré','Parchemin (10 feuilles)','Robe'], po:8, armes:[]},
+    criminel:{nom:'Criminel', car:['DEX','CON','INT'], don:'vigilant', comp:['Discrétion','Escamotage'], outils:'outils de voleur',
+      equip:['2 dagues','Outils de voleur','2 bourses','Pied-de-biche','Tenue de voyage'], po:16, armes:['Dague']},
+    sage:{nom:'Sage', car:['CON','INT','SAG'], don:'initie-magicien', comp:['Arcanes','Histoire'], outils:'matériel de calligraphe',
+      equip:['Bâton de combat','Matériel de calligraphe',"Livre d'histoire",'Parchemin (8 feuilles)','Robe'], po:8, armes:['Bâton de combat']},
+    soldat:{nom:'Soldat', car:['FOR','DEX','CON'], don:'sauvagerie', comp:['Athlétisme','Intimidation'], outils:'boîte de jeux (dés)',
+      equip:['Arc court et 20 flèches','Carquois','Lance','Boîte de jeux (dés)','Trousse de soins','Tenue de voyage'], po:14, armes:['Arc court','Lance']}
+  };
+  const DONS = {
+    'vigilant':{nom:'Vigilant'}, 'sauvagerie':{nom:'Sauvagerie martiale'}, 'doue':{nom:'Doué', repete:1},
+    'initie-clerc':{nom:'Initié à la magie (Clerc)', liste:'Clerc', mineurs:['Lumière','Résistance','Assistance','Stabilisation','Thaumaturgie','Flamme sacrée'], n1:['Sanctuaire','Soins','Bénédiction','Mot de guérison']},
+    'initie-magicien':{nom:'Initié à la magie (Magicien)', liste:'Magicien', mineurs:['Trait de feu','Message','Main du mage','Prestidigitation','Lumière','Rayon de givre'], n1:['Bouclier','Armure du mage','Détection de la magie','Feuille morte']}
+  };
+  // ordre de préférence quand la fiche choisit seule une compétence (à valeur égale)
+  const UTILES = ['Perception','Discrétion','Athlétisme','Intuition','Persuasion','Arcanes','Survie','Acrobaties','Investigation','Médecine',
+    'Tromperie','Religion','Histoire','Nature','Intimidation','Représentation','Escamotage','Dressage'];
+  const PORTEE_ATK = {'Flammes':'18 m'};
+  const pool = {}; // sorts déjà rédigés dans les fiches d'exemple
+  function initPool(fiches){ fiches.forEach(f => (f.sorts || []).forEach(o => { if(!pool[o.nom]) pool[o.nom] = o; })); }
+  const dm = m => m > 0 ? '+' + m : m < 0 ? String(m) : '';
+  const uniq = L => L.filter((x, i) => L.indexOf(x) === i);
+
+  function defauts(){ return {nom:'', genre:'h', espece:'humain', variante:'', classe:'guerrier', option:'', historique:'soldat', don:'doue', bonus:'', base:null, comps:null}; }
+  function variantes(g){ const e = ESPECES[g.espece]; return e && e.variantes || null; }
+  function variante(g){ const L = variantes(g); return L ? (L.find(v => v.id === g.variante) || L[0]) : null; }
+  function option(g){ const o = CLASSES[g.classe].options; return o ? (o.liste.find(v => v.id === g.option) || o.liste[0]) : null; }
+  function baseStd(g){ const k = CLASSES[g.classe], o = option(g); return Object.assign({}, k.std, o && o.std || {}); }
+  // bonus d'historique : +2 sur la plus haute des trois valeurs proposées, +1 sur la suivante
+  function choixBonus(g){ const L = HISTORIQUES[g.historique].car, out = [];
+    L.forEach(a => L.forEach(b => { if(a !== b) out.push(a + '2' + b + '1'); })); out.push('trois'); return out; }
+  function bonusHist(g, base){
+    const H = HISTORIQUES[g.historique], std = baseStd(g);
+    if(g.bonus === 'trois') return {[H.car[0]]:1, [H.car[1]]:1, [H.car[2]]:1};
+    const m = String(g.bonus || '').match(/^([A-Z]{3})2([A-Z]{3})1$/);
+    if(m && H.car.includes(m[1]) && H.car.includes(m[2]) && m[1] !== m[2]) return {[m[1]]:2, [m[2]]:1};
+    const tri = H.car.slice().sort((a, b) => (base[b] - base[a]) || (std[b] - std[a]));
+    return {[tri[0]]:2, [tri[1]]:1};
+  }
+  function caracs(g){
+    const base = Object.assign({}, baseStd(g), g.base || {}), b = bonusHist(g, base), c = {};
+    CK.forEach(k => { c[k] = Math.min(20, (Number(base[k]) || 0) + (b[k] || 0)); });
+    return {base, bonus:b, c};
+  }
+  function donsDe(g){
+    const H = HISTORIQUES[g.historique], L = [H.don];
+    if(ESPECES[g.espece].don){ const d = g.don && DONS[g.don] && (g.don !== H.don || DONS[g.don].repete) ? g.don : (H.don === 'doue' ? 'vigilant' : 'doue'); L.push(d); }
+    return L;
+  }
+  function donsHumain(g){ const H = HISTORIQUES[g.historique]; return Object.keys(DONS).filter(k => k !== H.don || DONS[k].repete); }
+  // compétences : celles de l'historique, puis le choix de classe, puis espèce et dons
+  function competences(g, c){
+    const k = CLASSES[g.classe], H = HISTORIQUES[g.historique], e = ESPECES[g.espece];
+    const owned = H.comp.slice();
+    const parValeur = L => L.slice().sort((a, b) => (c[COMP[b]] - c[COMP[a]]) || (UTILES.indexOf(a) - UTILES.indexOf(b)));
+    const dispo = k.comp.filter(s => !owned.includes(s));
+    // choix du joueur s'il y en a un (même incomplet), sinon les meilleures compétences de la liste
+    const choix = Array.isArray(g.comps) ? uniq(g.comps.filter(s => dispo.includes(s))).slice(0, k.n) : parValeur(dispo).slice(0, k.n);
+    owned.push(...choix);
+    const extra = {};
+    if(e.sens){ const s = e.sens.find(x => !owned.includes(x)) || e.sens[0]; extra.sens = s; if(!owned.includes(s)) owned.push(s); }
+    if(e.competent){ const s = parValeur(Object.keys(COMP)).find(x => !owned.includes(x)); extra.competent = s; owned.push(s); }
+    if(donsDe(g).includes('doue')){ const L = parValeur(Object.keys(COMP)).filter(x => !owned.includes(x)).slice(0, 3); extra.doue = L; owned.push(...L); }
+    return {owned, choix, dispo, extra};
+  }
+  function sortDe(nom, niveau, mc, pb){
+    const o = pool[nom]; if(!o) return null;
+    const x = JSON.parse(JSON.stringify(o)), dd = 8 + pb + mc, atk = pb + mc;
+    x.jet = String(x.jet || '').replace(/Attaque de sort \+\d+/, 'Attaque de sort ' + dm(atk) ).replace(/^Attaque \+\d+/, 'Attaque ' + dm(atk)).replace(/DD \d+/, 'DD ' + dd);
+    if(['Soins','Mot de guérison','Crosse des druides'].includes(nom)) x.des = String(x.des).replace(/^(\d+d\d+)[+-]\d+/, (m, d) => d + dm(mc));
+    if(niveau != null) x.niveau = niveau;
+    return x;
+  }
+
+  function construire(g){
+    const k = CLASSES[g.classe], H = HISTORIQUES[g.historique], e = ESPECES[g.espece], v = variante(g), o = option(g);
+    const {c, base, bonus} = caracs(g), pb = 2, M = {}; CK.forEach(a => M[a] = mod(c[a]));
+    const dons = donsDe(g), cp = competences(g, c);
+    const fem = g.genre === 'f';
+    const nomEsp = v && v.label && v.label !== e.nom && v.label !== 'Tieffelin' && v.label !== 'Goliath' ? v.label : (fem ? e.fem : e.nom);
+    const classeTxt = `${nomEsp} ${k.nom.toLowerCase()}${o && k.options.titre !== 'Équipement de départ' ? ` (${o.nom})` : ''} · ${H.nom}`;
+    // armure et CA
+    const armureId = o && o.armure || k.armure, armure = armureId ? ARMURES[armureId] : null;
+    let ca = armure ? armure[1](M.DEX) : 10 + M.DEX + (k.sansArmure ? M[k.sansArmure] : 0);
+    if(k.ombres) ca = Math.max(ca, 13 + M.DEX);
+    if(k.bouclier) ca += 2;
+    if(k.defense && armure) ca += 1;
+    // vitesse
+    let vit = (v && v.vit) || e.vit;
+    const lourde = armureId === 'cotte' && c.FOR < 13;
+    if(lourde) vit = vit === '10,50 m' ? '7,50 m' : '6 m';
+    // PV
+    const pv = Math.max(1, k.dv + M.CON + (e.pv || 0));
+    // attaques
+    const equipCl = o && o.equip || k.equip, poCl = o && o.po != null ? o.po : k.po, armesCl = o && o.armes || k.armes;
+    const attaques = [];
+    const arme = nom => {
+      if(nom === 'Mains nues'){ const m = Math.max(M.FOR, M.DEX); return {nom:'Mains nues', toucher:pb + m, degats:`1d6${dm(m)} contondants`}; }
+      const w = ARMES[nom]; if(!w) return null;
+      let m = w.dist ? M.DEX : w.fin ? Math.max(M.FOR, M.DEX) : M.FOR, de = w.d, lab = nom;
+      const moine = k.moine && !w.dist && !['Épée à deux mains','Hache à deux mains',"Fléau d'armes",'Épée longue'].includes(nom);
+      if(moine) m = Math.max(M.FOR, M.DEX);
+      if(w.poly && !k.bouclier){ de = w.poly; lab += ' (à deux mains)'; }
+      else if(w.lancer) lab += ` (lancer ${w.lancer} m)`;
+      else if(w.dist) lab += ` (${w.dist} m)`;
+      if(moine && de === '1d4') de = '1d6';
+      return {nom:lab, toucher:pb + m, degats:`${de}${dm(m)} ${w.t}`};
+    };
+    // sorts
+    const sorts = [], vus = new Set(), sNotes = [];
+    const ajoute = (nom, niveau, mc) => { if(vus.has(nom)) return true; const x = sortDe(nom, niveau, mc, pb); if(!x) return false; vus.add(nom); sorts.push(x); return true; };
+    const mental = Math.max(M.INT, M.SAG, M.CHA), mentalK = ['INT','SAG','CHA'].find(a => M[a] === mental);
+    const sp = k.sorts;
+    if(sp){ const mc = M[sp.car];
+      sp.mineurs.forEach(n => ajoute(n, 0, mc));
+      if(o && o.mineur){ const n = o.mineur.find(x => !vus.has(x) && pool[x]); if(n) ajoute(n, 0, mc); }
+      sp.prep.forEach(n => ajoute(n, 1, mc)); (sp.toujours || []).forEach(n => ajoute(n, 1, mc)); (sp.grimoire || []).forEach(n => ajoute(n, 1, mc)); }
+    const donSorts = [];
+    dons.filter(d => DONS[d].liste).forEach(d => { const D = DONS[d], mc = M[mentalK];
+      const mi = D.mineurs.filter(n => !vus.has(n)).slice(0, 2), un = D.n1.find(n => !vus.has(n));
+      mi.forEach(n => ajoute(n, 0, mc)); if(un) ajoute(un, 1, mc); donSorts.push({D, mi, un}); });
+    if(v){ const L = [].concat(v.mineur || [], v.mineurs || []); L.forEach(n => { if(!ajoute(n, 0, M[mentalK])) sNotes.push(n); }); (v.toujours || []).forEach(n => ajoute(n, 1, M[mentalK])); }
+    if(e === ESPECES.tieffelin) ajoute('Thaumaturgie', 0, M[mentalK]);
+    // attaques : sorts d'attaque d'abord pour les lanceurs de sorts, sinon les armes d'abord
+    const atkArmes = uniq(armesCl.concat(H.armes)).map(arme).filter(Boolean);
+    const atkSorts = sorts.filter(s => SORTS_ATTAQUE.includes(s.nom)).map(s => {
+      const m = String(s.jet).match(/Attaque(?: de sort)? ([+-]\d+)/), t = m ? Number(m[1]) : pb + M[sp ? sp.car : mentalK];
+      return {nom:`${s.nom} (${s.nom === 'Crosse des druides' ? 'bâton' : PORTEE_ATK[s.nom] || s.portee})`, toucher:t, degats:s.nom === 'Crosse des druides' ? `${s.des} contondants ou force` : s.des}; });
+    const lanceur = sp && ['INT','SAG','CHA'].includes(sp.car) && !['paladin','rodeur'].includes(g.classe);
+    (lanceur ? atkSorts.concat(atkArmes) : atkArmes.concat(atkSorts)).slice(0, 4).forEach(a => attaques.push(a));
+    // compétences et jets de sauvegarde
+    const bonusSpec = o && o.bonus ? o.bonus : [];
+    const talents = [];
+    const cles = uniq(cp.owned.concat(bonusSpec));
+    cles.forEach(s => { const a = COMP[s]; let b = M[a];
+      if(cp.owned.includes(s)) b += pb;
+      if(k.expertise && expertise(g, cp).includes(s)) b += pb;
+      if(bonusSpec.includes(s)) b += Math.max(1, M.SAG);
+      talents.push({nom:s, bonus:b}); });
+    talents.sort((a, b) => b.bonus - a.bonus);
+    CK.forEach(a => talents.push({nom:'JS ' + CNOM[a], bonus:M[a] + (k.js.includes(a) ? pb : 0)}));
+    // ressources
+    const ress = [];
+    if(sp && sp.empl) ress.push({nom:'Emplacements de sort niv. 1', max:sp.empl, reste:sp.empl});
+    if(sp && sp.pacte) ress.push({nom:'Magie de pacte niv. 1', max:1, reste:1, repos:'court'});
+    ress.push(...k.ress(c));
+    donSorts.forEach(({un}) => { if(un) ress.push({nom:`${un} sans emplacement`, max:1, reste:1}); });
+    if(e.ress) ress.push(...e.ress(c, pb, v));
+    // inventaire
+    const inv = fusion(equipCl.concat(H.equip));
+    // notes
+    const N = [];
+    if(sp){ const mc = M[sp.car]; N.push(`Sorts (${CNOM[sp.car]}) : DD ${8 + pb + mc}, attaque ${dm(pb + mc)}.${sp.empl ? ` Emplacements niv. 1 : ${sp.empl}/${sp.empl}.` : ''}`); }
+    const kn = k.notes(c); if(kn) N.push(kn);
+    if(o && o.note) N.push(o.note(c));
+    if(k.bottes){ const L = atkArmes.map(a => a.nom.replace(/ \(.*\)$/, '')).filter(n => ARMES[n]).slice(0, k.bottes);
+      if(L.length) N.push(`Bottes d'arme (${k.bottes}) : ${L.map(n => `${n.toLowerCase()} (${ARMES[n].botte})`).join(', ')}.`); }
+    if(k.expertise) N.push(`Expertise : ${expertise(g, cp).join(', ')} (comprises).`);
+    dons.forEach(d => { const D = DONS[d];
+      if(d === 'vigilant') N.push(`Don Vigilant (+${pb} à l'Initiative, comprise ; échange d'Initiative).`);
+      else if(d === 'sauvagerie') N.push("Don Sauvagerie martiale (une fois par tour, relance les dés de dégâts d'une arme et garde l'un ou l'autre).");
+      else if(d === 'doue') N.push(`Don Doué : ${cp.extra.doue.join(', ')}.`);
+      else { const x = donSorts.find(y => y.D === D); N.push(`Don ${D.nom.replace(')', `, ${CNOM[mentalK]})`)} : ${x.mi.concat(x.un || []).join(', ')}${x.un ? ` (${x.un} 1 fois gratuit par repos long)` : ''}.`); } });
+    const sk = e.sens ? cp.extra.sens : e.competent ? cp.extra.competent : '';
+    if(e.notes) N.push(e.notes(c, pb, v, sk));
+    if(lourde) N.push('Cotte de mailles sans Force 13 : Vitesse réduite de 3 m.');
+    if(['cotte'].includes(armureId)) N.push('Cotte de mailles : Désavantage en Discrétion.');
+    const outils = uniq([k.outils, H.outils].filter(Boolean));
+    if(outils.length) N.push(`Maîtrise d'outils : ${outils.join(', ')}.`);
+    N.push(`Langues : commun et deux langues au choix${k.langues ? `, ${k.langues}` : ''}.`);
+    const fiche = {nom:(g.nom || '').trim() || 'Nouveau héros', classe:classeTxt, niveau:1, xp:0, couleur:k.couleur, genre:fem ? 'femme' : 'homme',
+      pv, pvMax:pv, ca, initiative:M.DEX + (dons.includes('vigilant') ? pb : 0), vitesse:vit, maitrise:pb,
+      ressources:ress, carac:c, attaques, talents, sorts, inventaire:inv, or:poCl + H.po, etats:[], notes:N.join(' ')};
+    if(!ress.length) delete fiche.ressources;
+    return {fiche, base, bonus, c, cp};
+  }
+  function expertise(g, cp){
+    const pref = ['Escamotage','Discrétion'].filter(s => cp.owned.includes(s));
+    return uniq(pref.concat(cp.owned)).slice(0, 2);
+  }
+  // "2 dagues" + "2 dagues" = "4 dagues" ; doublons exacts regroupés
+  function fusion(L){
+    const out = [], idx = {};
+    L.forEach(t => { const m = t.match(/^(\d+) (.+)$/), n = m ? +m[1] : 1, k = norm(m ? m[2] : t);
+      if(idx[k] != null){ out[idx[k]].n += n; } else { idx[k] = out.length; out.push({n, t:m ? m[2] : t, num:!!m}); } });
+    return out.map(x => x.num || x.n > 1 ? (x.num ? `${x.n} ${x.t}` : `${x.t} (×${x.n})`) : x.t);
+  }
+  return {CK, CNOM, COMP, CLASSES, ESPECES, HISTORIQUES, DONS, initPool, defauts, choixBonus, bonusHist, variantes, variante, option, baseStd, caracs, competences, donsHumain, construire};
+})();
+
+CREA.initPool(FICHES);
+const KEY_CREA = 'chroniques.createur.v1';
+let GEN = (() => { try{ const o = JSON.parse(localStorage.getItem(KEY_CREA) || 'null'); if(o && CREA.CLASSES[o.classe] && CREA.ESPECES[o.espece] && CREA.HISTORIQUES[o.historique]) return Object.assign(CREA.defauts(), o); }catch(e){} return Object.assign(CREA.defauts(), {ouvert:false}); })();
+function saveCrea(){ try{ localStorage.setItem(KEY_CREA, JSON.stringify(GEN)); }catch(e){} }
+function creaFiche(){ return CREA.construire(GEN).fiche; }
+function renderCreateur(){
+  const head = `<div class="kicker">Niveau 1 · SRD 5.2.1</div><h2 class="big">Créer son personnage</h2>${flourish}`;
+  if(!GEN.ouvert) return `<section class="section dark" id="createur">${head}
+    <p class="lead">Choisissez vous-même l'espèce, la classe et l'historique : la fiche se calcule selon les règles officielles, prête à donner au MJ.</p>
+    <div class="btnrow"><button class="btn-gold small" id="creaOuvrir">Créer mon personnage</button></div></section>`;
+  const r = CREA.construire(GEN), K = CREA.CLASSES[GEN.classe], E = CREA.ESPECES[GEN.espece], H = CREA.HISTORIQUES[GEN.historique];
+  const opt = (L, v) => L.map(([k, t]) => `<option value="${h(k)}" ${k === v ? 'selected' : ''}>${h(t)}</option>`).join('');
+  const champ = (lab, html) => `<label class="cf"><small>${lab}</small>${html}</label>`;
+  const sel = (id, L, v) => `<select class="field" data-crea="${id}">${opt(L, v)}</select>`;
+  const vs = CREA.variantes(GEN), v = CREA.variante(GEN), o = K.options ? CREA.option(GEN) : null;
+  const tri = obj => Object.keys(obj).map(k => [k, obj[k].nom]).sort((a, b) => a[1].localeCompare(b[1], 'fr'));
+  const bonusL = CREA.choixBonus(GEN).map(k => [k, k === 'trois' ? `+1 ${H.car.join(', +1 ')}` : `+2 ${k.slice(0, 3)}, +1 ${k.slice(4, 7)}`]);
+  const auto = CREA.bonusHist(Object.assign({}, GEN, {bonus:''}), r.base), autoTxt = Object.keys(auto).map(k => `+${auto[k]} ${k}`).join(', ');
+  const champs = [
+    champ('Nom', `<input class="field" data-crea="nom" value="${h(GEN.nom)}" placeholder="Nom du héros" maxlength="40" autocomplete="off">`),
+    champ('Genre', sel('genre', [['h','Homme'],['f','Femme']], GEN.genre)),
+    champ('Espèce', sel('espece', tri(CREA.ESPECES), GEN.espece)),
+    vs ? champ(GEN.espece === 'drakeide' ? 'Ascendance draconique' : GEN.espece === 'goliath' ? 'Ascendance gigante' : GEN.espece === 'tieffelin' ? 'Héritage fiélon' : 'Lignage', sel('variante', vs.map(x => [x.id, x.nom]), v.id)) : '',
+    champ('Classe', sel('classe', tri(CREA.CLASSES), GEN.classe)),
+    o ? champ(K.options.titre, sel('option', K.options.liste.map(x => [x.id, x.nom]), o.id)) : '',
+    champ('Historique', sel('historique', tri(CREA.HISTORIQUES), GEN.historique)),
+    champ('Bonus d\'historique', sel('bonus', [['', `Auto (${autoTxt})`]].concat(bonusL), GEN.bonus || '')),
+    E.don ? champ('Don d\'origines (Polyvalent)', sel('don', CREA.donsHumain(GEN).map(k => [k, CREA.DONS[k].nom]), CREA.donsHumain(GEN).includes(GEN.don) ? GEN.don : 'doue')) : ''
+  ].join('');
+  const cars = CREA.CK.map(k => `<div class="cc"><small>${k}</small><input class="field" type="number" inputmode="numeric" min="3" max="20" data-creacar="${k}" value="${r.base[k]}">
+    <span>${r.bonus[k] ? `+${r.bonus[k]} → ` : ''}<b>${r.c[k]}</b> (${sgn(mod(r.c[k]))})</span></div>`).join('');
+  const comps = r.cp.dispo.map(s => `<button class="tag pick ${r.cp.choix.includes(s) ? 'on' : ''}" data-creacomp="${h(s)}" aria-pressed="${r.cp.choix.includes(s)}">${h(s)}</button>`).join('');
+  return `<section class="section dark" id="createur">${head}
+    <p class="lead">Tout est calculé selon les règles (SRD 5.2.1) : PV, CA, attaques, compétences et sorts recommandés. Ajustez ce que vous voulez, puis « Copier la fiche » pour la donner au MJ.</p>
+    <div class="sheet crea"><div class="in"><div class="body">
+      <div class="creagrid">${champs}</div>
+      <div class="label">Caractéristiques <em>· valeurs standard ${h(K.nom)}, bonus d'historique ${h(H.nom)}</em></div>
+      <div class="creacar">${cars}</div>
+      <div class="btnrow"><button class="btn" id="creaStd">Valeurs standard</button><button class="btn" id="creaHasard">Au hasard</button><button class="btn" id="creaFermer">Replier</button></div>
+      <div class="label">Compétences de classe <em>· ${r.cp.choix.length}/${K.n} choisies</em></div>
+      <div class="tags">${comps}</div>
+      <p class="creanote">Déjà acquises : ${h(H.comp.join(', '))} (historique)${r.cp.extra.sens ? `, ${h(r.cp.extra.sens)} (Sens aiguisés)` : ''}${r.cp.extra.competent ? `, ${h(r.cp.extra.competent)} (Compétent)` : ''}${r.cp.extra.doue ? `, ${h(r.cp.extra.doue.join(', '))} (Doué)` : ''}.</p>
+    </div></div></div>
+    <div class="sheets">${ficheHTML(r.fiche, 0, 'g')}</div>
+  </section>`;
+}
+function majCrea(focus){
+  saveCrea(); const el = $('createur'); if(!el) return render();
+  const tmp = document.createElement('div'); tmp.innerHTML = renderCreateur(); el.replaceWith(tmp.firstElementChild); bindCreateur();
+  if(focus){ const f = document.querySelector(focus); if(f) f.focus(); }
+}
+function bindCreateur(){
+  const on = (id, fn) => { const e = $(id); if(e) e.onclick = fn; };
+  on('creaOuvrir', () => { GEN.ouvert = true; majCrea(); const s = $('createur'); if(s) s.scrollIntoView({behavior:'smooth', block:'start'}); });
+  on('creaFermer', () => { GEN.ouvert = false; majCrea(); });
+  on('creaStd', () => { GEN.base = null; majCrea(); });
+  on('creaHasard', () => { const pick = L => L[Math.floor(Math.random() * L.length)];
+    Object.assign(GEN, {espece:pick(Object.keys(CREA.ESPECES)), classe:pick(Object.keys(CREA.CLASSES)), historique:pick(Object.keys(CREA.HISTORIQUES)), genre:pick(['h','f']),
+      variante:'', option:'', bonus:'', base:null, comps:null});
+    const vs = CREA.variantes(GEN); if(vs) GEN.variante = pick(vs).id;
+    const os = CREA.CLASSES[GEN.classe].options; if(os) GEN.option = pick(os.liste).id;
+    majCrea(); });
+  const reset = {espece:['variante'], classe:['option','base','comps'], historique:['bonus','comps'], option:['base']};
+  document.querySelectorAll('#createur [data-crea]').forEach(e => e.onchange = () => { const k = e.dataset.crea;
+    GEN[k] = k === 'nom' ? e.value.trim().slice(0, 40) : e.value; (reset[k] || []).forEach(x => { GEN[x] = x === 'base' || x === 'comps' ? null : ''; });
+    if(k === 'espece' && !CREA.ESPECES[GEN.espece].don) GEN.don = 'doue';
+    majCrea(); });
+  document.querySelectorAll('#createur [data-creacar]').forEach(e => e.onchange = () => {
+    const base = CREA.caracs(GEN).base; base[e.dataset.creacar] = Math.max(3, Math.min(20, parseInt(e.value) || 10)); GEN.base = base; majCrea(); });
+  document.querySelectorAll('#createur [data-creacomp]').forEach(b => b.onclick = () => {
+    const s = b.dataset.creacomp, cp = CREA.competences(GEN, CREA.caracs(GEN).c), n = CREA.CLASSES[GEN.classe].n;
+    let L = cp.choix.slice();
+    if(L.includes(s)) L = L.filter(x => x !== s); else { L.push(s); if(L.length > n) L.shift(); }
+    GEN.comps = L; majCrea(); });
+  document.querySelectorAll('#createur [data-fspell]').forEach(b => b.onclick = () => ficheSort(b));
+  document.querySelectorAll('#createur [data-fichecopy]').forEach(b => b.onclick = () => ficheCopie(b));
+}
+function ficheDe(cle){ return cle === 'g' ? creaFiche() : FICHES[+cle]; }
+function ficheSort(b){ const [i, j] = b.dataset.fspell.split(':'); const x = ficheDe(i), o = x && x.sorts[+j]; if(!o) return;
+  showSpell(x.nom, Object.assign({}, o, {description: SORTS_SRD[o.nom] || ''})); }
+async function ficheCopie(b){ const x = ficheDe(b.dataset.fichecopy); if(!x) return;
+  try{ await navigator.clipboard.writeText('Voici ma fiche de personnage : ' + JSON.stringify(x)); toast('Fiche copiée : collez-la au MJ'); }catch(e){ toast('Copie impossible'); } }
 
 function wrapPanel(inner){ return `<section class="parch panel"><div class="in">${corners()}${inner}</div></section>`; }
 function emptyMsg(t){ return `<div class="empty"><p>${t}</p></div>`; }
@@ -1534,6 +1974,7 @@ function draw(){
     + `<div class="grid2">${renderCarte()}${renderQuetes()}</div>`
     + `<div class="grid2">${renderRecit()}${renderMonde()}</div>`
     + renderFiches()
+    + renderCreateur()
     + `<div class="grid2">${renderRegles()}</div>`
     + '<div style="height:24px"></div>';
   document.title = (S.titre || 'Chroniques') + ' – Table de jeu';
@@ -1657,10 +2098,12 @@ function bind(){
   on('syncInv', syncInviter);
   on('syncQuit', syncQuitter);
   document.querySelectorAll('[data-fiche]').forEach(b => b.onclick = () => { const i = +b.dataset.fiche; ficheSel = ficheSel === i ? null : i; render(); });
-  document.querySelectorAll('[data-fspell]').forEach(b => b.onclick = () => { const [i, j] = b.dataset.fspell.split(':'); const x = FICHES[+i], o = x.sorts[+j];
-    showSpell(x.nom, Object.assign({}, o, {description: SORTS_SRD[o.nom] || ''})); });
-  document.querySelectorAll('[data-fichecopy]').forEach(b => b.onclick = async () => { const x = FICHES[+b.dataset.fichecopy];
-    try{ await navigator.clipboard.writeText('Voici ma fiche de personnage : ' + JSON.stringify(x)); toast('Fiche copiée : collez-la au MJ'); }catch(e){ toast('Copie impossible'); } });
+  document.querySelectorAll('[data-fspell]').forEach(b => b.onclick = () => ficheSort(b));
+  document.querySelectorAll('[data-fichecopy]').forEach(b => b.onclick = () => ficheCopie(b));
+  bindCreateur();
+  on('qrTop', montrerQR);
+  on('qrBtn', montrerQR);
+  on('qrBtn2', montrerQR);
   on('demoBtn', () => change(() => { S = fix(DEMO()); heroSel = 0; }, 'Exemple chargé'));
   on('editScene', () => {
     if(editScene){ const t = $('sceneT'), x = $('sceneX'); const nt = t ? t.innerText.trim() : S.scene.titre, nx = x ? x.innerText.trim() : S.scene.texte;
@@ -1760,6 +2203,100 @@ function DEMO(){ return {
   monde:{pnj:[{nom:'Aldric', role:'Prêtre de Valbrume', note:'Inquiet, il cache quelque chose sur l\'amulette.', embleme:'croix', couleur:'or'},{nom:'Mère Hulda', role:'Aubergiste', note:'Connaît toutes les rumeurs du village.', embleme:'feuille', couleur:'brun'}], notes:'Le brassard rouge des gobelins semble être un signe de ralliement.'}
 };}
 
+/* ---------- QR code (mode octet, correction M, versions 1 à 10) ---------- */
+const QR = (() => {
+  // [blocs groupe 1, octets de données, blocs groupe 2, octets de données] et octets de correction par bloc (niveau M)
+  const EC = [null,[10,1,16,0,0],[16,1,28,0,0],[26,1,44,0,0],[18,2,32,0,0],[24,2,43,0,0],[16,4,27,0,0],[18,4,31,0,0],[22,2,38,2,39],[22,3,36,2,37],[26,4,43,1,44]];
+  const ALIGN = [null,[],[6,18],[6,22],[6,26],[6,30],[6,34],[6,22,38],[6,24,42],[6,26,46],[6,28,50]];
+  const EXP = new Array(512), LOG = new Array(256);
+  for(let i = 0, x = 1; i < 255; i++){ EXP[i] = x; LOG[x] = i; x <<= 1; if(x & 256) x ^= 0x11d; }
+  for(let i = 255; i < 512; i++) EXP[i] = EXP[i - 255];
+  const mul = (a, b) => a && b ? EXP[LOG[a] + LOG[b]] : 0;
+  function rsGen(n){ let g = [1]; for(let i = 0; i < n; i++){ const r = new Array(g.length + 1).fill(0);
+    for(let j = 0; j < g.length; j++){ r[j] ^= g[j]; r[j + 1] ^= mul(g[j], EXP[i]); } g = r; } return g; }
+  function rs(data, n){ const g = rsGen(n), r = data.concat(new Array(n).fill(0));
+    for(let i = 0; i < data.length; i++){ const c = r[i]; if(c) for(let j = 0; j < g.length; j++) r[i + j] ^= mul(g[j], c); }
+    return r.slice(data.length); }
+  const utf8 = s => Array.from(new TextEncoder().encode(s));
+
+  function encode(text){
+    const bytes = utf8(text);
+    let ver = 1;
+    for(; ver <= 10; ver++){ const e = EC[ver], cap = e[1]*e[2] + e[3]*e[4]; if(4 + (ver < 10 ? 8 : 16) + 8*bytes.length <= 8*cap) break; }
+    if(ver > 10) throw new Error('Texte trop long pour le QR code');
+    const [ecn, b1, d1, b2, d2] = EC[ver], cap = b1*d1 + b2*d2;
+    // flux de bits
+    const bits = []; const put = (v, n) => { for(let i = n - 1; i >= 0; i--) bits.push(v >> i & 1); };
+    put(4, 4); put(bytes.length, ver < 10 ? 8 : 16); bytes.forEach(b => put(b, 8));
+    put(0, Math.min(4, 8*cap - bits.length)); while(bits.length % 8) bits.push(0);
+    const data = []; for(let i = 0; i < bits.length; i += 8) data.push(parseInt(bits.slice(i, i + 8).join(''), 2));
+    for(let p = 0; data.length < cap; p++) data.push(p % 2 ? 0x11 : 0xEC);
+    // blocs, correction, entrelacement
+    const blocs = []; let k = 0;
+    for(let i = 0; i < b1 + b2; i++){ const n = i < b1 ? d1 : d2; const d = data.slice(k, k + n); k += n; blocs.push({d, e: rs(d, ecn)}); }
+    const flux = [], dmax = Math.max(d1, d2);
+    for(let i = 0; i < dmax; i++) blocs.forEach(b => { if(i < b.d.length) flux.push(b.d[i]); });
+    for(let i = 0; i < ecn; i++) blocs.forEach(b => flux.push(b.e[i]));
+    // matrice
+    const N = 17 + 4*ver, M = [], F = [];
+    for(let i = 0; i < N; i++){ M.push(new Array(N).fill(0)); F.push(new Array(N).fill(false)); }
+    const set = (r, c, v) => { M[r][c] = v ? 1 : 0; F[r][c] = true; };
+    const finder = (r, c) => { for(let i = -1; i <= 7; i++) for(let j = -1; j <= 7; j++){ const y = r + i, x = c + j; if(y < 0 || x < 0 || y >= N || x >= N) continue;
+      const v = i >= 0 && i <= 6 && j >= 0 && j <= 6 && (i === 0 || i === 6 || j === 0 || j === 6 || (i >= 2 && i <= 4 && j >= 2 && j <= 4)); set(y, x, v); } };
+    finder(0, 0); finder(0, N - 7); finder(N - 7, 0);
+    for(let i = 8; i < N - 8; i++){ set(6, i, i % 2 === 0); set(i, 6, i % 2 === 0); }
+    const A = ALIGN[ver];
+    const L = A.length - 1;
+    A.forEach((r, a) => A.forEach((c, b) => { if((a === 0 && b === 0) || (a === 0 && b === L) || (a === L && b === 0)) return; for(let i = -2; i <= 2; i++) for(let j = -2; j <= 2; j++) set(r + i, c + j, Math.max(Math.abs(i), Math.abs(j)) !== 1); }));
+    // zones réservées : format (et version ≥ 7)
+    for(let i = 0; i < 9; i++){ if(!F[8][i]) set(8, i, 0); if(!F[i][8]) set(i, 8, 0); }
+    for(let i = 0; i < 8; i++){ set(8, N - 1 - i, 0); set(N - 1 - i, 8, 0); }
+    set(N - 8, 8, 1); // module sombre
+    if(ver >= 7){ let rem = ver; for(let i = 0; i < 12; i++) rem = (rem << 1) ^ ((rem >>> 11) * 0x1f25); const v = ver << 12 | rem; for(let i = 0; i < 18; i++){ const b = v >> i & 1, a = Math.floor(i / 3), c = N - 11 + i % 3; set(a, c, b); set(c, a, b); } }
+    // placement des données en zigzag
+    const dbits = []; flux.forEach(b => { for(let i = 7; i >= 0; i--) dbits.push(b >> i & 1); });
+    let bi = 0;
+    let up = true;
+    for(let c = N - 1; c >= 1; c -= 2, up = !up){ if(c === 6) c = 5;
+      for(let n = 0; n < N; n++){ const r = up ? N - 1 - n : n;
+        for(let j = 0; j < 2; j++){ const x = c - j; if(F[r][x]) continue; M[r][x] = bi < dbits.length ? dbits[bi] : 0; bi++; } } }
+    // masque : on garde celui qui pénalise le moins
+    const MASK = [(r,c)=>(r+c)%2===0,(r)=>r%2===0,(r,c)=>c%3===0,(r,c)=>(r+c)%3===0,(r,c)=>(Math.floor(r/2)+Math.floor(c/3))%2===0,
+      (r,c)=>r*c%2+r*c%3===0,(r,c)=>(r*c%2+r*c%3)%2===0,(r,c)=>((r+c)%2+r*c%3)%2===0];
+    let best = null, bestP = Infinity;
+    for(let m = 0; m < 8; m++){
+      const X = M.map(row => row.slice());
+      for(let r = 0; r < N; r++) for(let c = 0; c < N; c++) if(!F[r][c] && MASK[m](r, c)) X[r][c] ^= 1;
+      const dat = (0 << 3) | m; let rem = dat; // niveau M = 00
+      for(let i = 0; i < 10; i++) rem = (rem << 1) ^ ((rem >>> 9) * 0x537);
+      const f = ((dat << 10) | rem) ^ 0x5412;
+      for(let i = 0; i < 15; i++){ const b = f >> i & 1;
+        if(i < 6) X[i][8] = b; else if(i === 6) X[7][8] = b; else if(i === 7) X[8][8] = b; else if(i === 8) X[8][7] = b; else X[8][14 - i] = b;
+        if(i < 8) X[8][N - 1 - i] = b; else X[N - 15 + i][8] = b; }
+      X[N - 8][8] = 1;
+      const p = penalite(X, N); if(p < bestP){ bestP = p; best = X; }
+    }
+    return best;
+  }
+  function penalite(X, N){
+    let p = 0;
+    const lignes = (get) => { for(let i = 0; i < N; i++){ let run = 1;
+      for(let j = 1; j < N; j++){ if(get(i, j) === get(i, j - 1)){ run++; if(run === 5) p += 3; else if(run > 5) p++; } else run = 1; }
+      for(let j = 0; j + 10 < N; j++){ const s = []; for(let k = 0; k < 11; k++) s.push(get(i, j + k)); const t = s.join('');
+        if(t === '10111010000' || t === '00001011101') p += 40; } } };
+    lignes((i, j) => X[i][j]); lignes((i, j) => X[j][i]);
+    for(let i = 0; i < N - 1; i++) for(let j = 0; j < N - 1; j++){ const v = X[i][j]; if(v === X[i+1][j] && v === X[i][j+1] && v === X[i+1][j+1]) p += 3; }
+    let d = 0; X.forEach(r => r.forEach(v => d += v)); p += Math.floor(Math.abs(d * 20 / (N * N) - 10)) * 10;
+    return p;
+  }
+  // SVG carré, marge de 4 modules
+  function svg(text, dark = '#1b1410', light = '#fff'){
+    const X = encode(text), N = X.length, T = N + 8; let d = '';
+    for(let r = 0; r < N; r++) for(let c = 0; c < N; c++) if(X[r][c]) d += `M${c + 4} ${r + 4}h1v1h-1z`;
+    return `<svg viewBox="0 0 ${T} ${T}" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges" role="img" aria-label="QR code"><rect width="${T}" height="${T}" fill="${light}"/><path d="${d}" fill="${dark}"/></svg>`;
+  }
+  return {encode, svg};
+})();
 /* ---------- table partagée (synchronisation entre téléphones) ----------
    Chaque téléphone abonné à la même « salle » reçoit l'état complet de la partie
    dès qu'un joueur la modifie (lien du MJ, PV, tour suivant…).
@@ -1860,11 +2397,26 @@ function syncRejoindre(code){
 function syncCreer(){
   const a = new Uint8Array(12); crypto.getRandomValues(a);
   SY.salle = Array.from(a, x => 'abcdefghijkmnpqrstuvwxyz23456789'[x % 32]).join('');
-  syncSave(); syncConnecter(); syncChanged(); render(); syncInviter();
+  syncSave(); syncConnecter(); syncChanged(); render(); montrerQR();
 }
 function syncQuitter(){ SY.salle = ''; syncSave(); syncConnecter(); render(); toast('Table partagée quittée'); }
+const lienSalle = () => location.origin + location.pathname + '#salle=' + SY.salle;
+// QR code d'invitation en grand : les autres joueurs le scannent avec l'appareil photo du téléphone
+function montrerQR(){
+  if(!SY.salle) return;
+  const pop = $('spellPop'); pop.classList.remove('etat'); pop.classList.add('qr'); pop.setAttribute('aria-label', 'QR code de la table partagée');
+  let code; try{ code = QR.svg(lienSalle()); }catch(e){ code = ''; }
+  pop.innerHTML = `<button class="trayx" id="spellX" aria-label="Fermer">${svg('x')}</button>
+    <div class="kick">Table partagée</div><h3>Rejoindre la table</h3>
+    <p class="sub">Scannez avec l'appareil photo du téléphone, puis ouvrez le lien.</p>
+    ${code ? `<div class="qrbox">${code}</div>` : ''}
+    <p class="qrcap">Code : <code>${h(SY.salle)}</code></p>
+    <div class="btnrow"><button class="btn" id="qrEnvoyer">Envoyer le lien</button></div>`;
+  $('spellBg').classList.add('open'); pop.classList.add('open');
+  $('spellX').onclick = closeSpell; $('qrEnvoyer').onclick = syncInviter;
+}
 async function syncInviter(){
-  const url = location.origin + location.pathname + '#salle=' + SY.salle;
+  const url = lienSalle();
   try{ if(navigator.share){ await navigator.share({title:'Table partagée', text:'Rejoignez la table de jeu', url}); return; } }catch(e){ if(e && e.name === 'AbortError') return; }
   try{ await navigator.clipboard.writeText(url); toast('🔗 Lien d\'invitation copié'); }
   catch(e){ const t = $('impTxt'); if(t){ t.value = url; t.select(); toast('Lien d\'invitation affiché ci-dessus'); } }
@@ -1892,8 +2444,9 @@ function renderSync(){
   return `<div class="label">Table partagée</div>
     <p style="font-size:14px;margin:0 0 6px" id="syncStatut">${SYNC_TXT[syncEtat]}</p>
     ${SY.salle
-      ? `<p style="font-size:13px;color:var(--ink2);margin:0">Code : <code>${h(SY.salle)}</code></p>
-         <div class="btnrow"><button class="btn" id="syncInv">Inviter un joueur</button><button class="btn danger" id="syncQuit">Quitter</button></div>`
+      ? `<button class="qrbox" id="qrBtn" aria-label="Afficher le QR code en grand">${(() => { try{ return QR.svg(lienSalle()); }catch(e){ return ''; } })()}</button>
+         <p class="qrcap">Scannez pour rejoindre · code <code>${h(SY.salle)}</code></p>
+         <div class="btnrow"><button class="btn" id="syncInv">Inviter un joueur</button><button class="btn" id="qrBtn2">QR code en grand</button><button class="btn danger" id="syncQuit">Quitter</button></div>`
       : `<div class="btnrow"><button class="btn" id="syncNew">Créer une table partagée</button></div>
          <p style="font-size:13px;color:var(--ink2);margin:6px 0 0">Un seul joueur la crée, puis envoie le lien d'invitation aux autres.</p>`}`;
 }
