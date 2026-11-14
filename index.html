@@ -1990,7 +1990,7 @@ async function ficheCopie(b){ const x = ficheDe(b.dataset.fichecopy); if(!x) ret
 /* ---------- préparer la partie ---------- */
 const PREP_MAX = 6;
 const PREP_TONS = ['Épique', 'Sombre', 'Humour', 'Mystère', 'Horreur'];
-const PREP_DUREES = ['1 h', '2 h', '3 h', '4 h ou plus'];
+const PREP_DUREES = ['Sans durée', '1 h', '2 h', '3 h', '4 h ou plus'];
 function renderPreparation(){
   const P = S.preparation, libres = P.joueurs - P.places.length;
   const opt = (L, v, vide) => (vide ? `<option value="" ${!v ? 'selected' : ''}>${vide}</option>` : '') + L.map(([k, t, off]) => `<option value="${h(k)}" ${k === v ? 'selected' : ''} ${off ? 'disabled' : ''}>${h(t)}</option>`).join('');
@@ -2004,7 +2004,7 @@ function renderPreparation(){
       ${champ('Joueurs', 'joueurs', opt(nbs, String(P.joueurs)))}
       ${champ('Dés', 'des', opt([['reels', 'Dés réels'], ['virtuels', 'Dés virtuels']], P.des))}
       ${champ('Ton', 'ton', opt(PREP_TONS.map(t => [t, t]), P.ton, 'Au choix du MJ'))}
-      ${champ('Durée', 'duree', opt(PREP_DUREES.map(t => [t, t]), P.duree, 'Libre'))}
+      ${champ('Durée', 'duree', opt(PREP_DUREES.map(t => [t, t]), P.duree, 'Au choix du MJ'))}
     </div>
     <div class="label">Héros ${P.places.length} / ${P.joueurs}</div>
     ${P.places.map((p, i) => { const x = p.fiche;
@@ -2046,7 +2046,7 @@ function prepColler(){
 }
 function prepMessage(P){
   const r = [`${P.joueurs} joueur${P.joueurs > 1 ? 's' : ''}`, P.des === 'virtuels' ? 'dés virtuels (dans l\'application)' : 'dés réels'];
-  if(P.ton) r.push('ton : ' + P.ton.toLowerCase()); if(P.duree) r.push('durée : ' + P.duree);
+  if(P.ton) r.push('ton : ' + P.ton.toLowerCase()); if(P.duree) r.push(P.duree === 'Sans durée' ? 'sans durée fixée (on joue tant qu\'on veut)' : 'durée : ' + P.duree);
   const n = v => v == null || v === '' ? '?' : v, s = v => isFinite(Number(v)) && v !== '' && v != null ? sgn(Number(v)) : '?';
   const L = P.places.map(({fiche:x}) => `- ${x.nom} : ${x.classe || 'classe ?'}, niveau ${x.niveau || 1}, PV ${n(x.pvMax ?? x.pv)}, CA ${n(x.ca)}, initiative ${s(x.initiative)}`);
   return `Nouvelle partie préparée sur la table. ${r.join(', ')}.\nHéros déjà sur la table, avec leurs fiches complètes :\n${L.join('\n')}\nLance l'aventure.`;
