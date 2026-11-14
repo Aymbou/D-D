@@ -533,7 +533,7 @@ html,body{overscroll-behavior-y:contain}
    - CORRECTIF : +1 pour une simple correction ;
    - MAJEUR : changement qui casse les anciens liens ou sauvegardes.
    Penser à changer aussi <meta name="version"> en haut du fichier. */
-const VERSION = '1.14.0', VERSION_DATE = '13/11/2026';
+const VERSION = '1.14.1', VERSION_DATE = '14/11/2026';
 const KEY = 'chroniques.etat.v1', KEY_OPT = 'chroniques.options.v1';
 const TABS = [['groupe','Groupe'],['carte','Carte'],['quetes','Quêtes'],['recit','Récit'],['monde','Monde'],['regles','Règles']];
 
@@ -2021,10 +2021,10 @@ function draw(){
   RES_POP = [];
   const y = window.scrollY;
   app.innerHTML = renderSky() + renderGroupe()
-    + `<div class="grid2">${renderCarte()}${renderQuetes()}</div>`
-    + `<div class="grid2">${renderRecit()}${renderMonde()}</div>`
     + renderFiches()
     + renderCreateur()
+    + `<div class="grid2">${renderCarte()}${renderQuetes()}</div>`
+    + `<div class="grid2">${renderRecit()}${renderMonde()}</div>`
     + `<div class="grid2">${renderRegles()}</div>`
     + '<div style="height:24px"></div>';
   document.title = (S.titre || 'Chroniques') + ' – Table de jeu';
