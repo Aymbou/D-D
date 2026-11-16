@@ -546,7 +546,7 @@ html,body{overscroll-behavior-y:contain}
    - CORRECTIF : +1 pour une simple correction ;
    - MAJEUR : changement qui casse les anciens liens ou sauvegardes.
    Penser à changer aussi <meta name="version"> en haut du fichier. */
-const VERSION = '1.15.0', VERSION_DATE = '14/11/2026';
+const VERSION = '1.15.1', VERSION_DATE = '16/11/2026';
 const KEY = 'chroniques.etat.v1', KEY_OPT = 'chroniques.options.v1';
 const TABS = [['groupe','Groupe'],['carte','Carte'],['quetes','Quêtes'],['recit','Récit'],['monde','Monde'],['regles','Règles']];
 
@@ -1908,6 +1908,7 @@ let GEN = (() => { try{ const o = JSON.parse(localStorage.getItem(KEY_CREA) || '
 function saveCrea(){ try{ localStorage.setItem(KEY_CREA, JSON.stringify(GEN)); }catch(e){} }
 function creaFiche(){ return CREA.construire(GEN).fiche; }
 function renderCreateur(){
+  if(!partieVide()) return ''; // partie lancée : le créateur disparaît, comme les fiches d'exemple
   const head = `<div class="kicker">Niveau 1 · SRD 5.2.1</div><h2 class="big">Créer son personnage</h2>${flourish}`;
   if(!GEN.ouvert) return `<section class="section dark" id="createur">${head}
     <p class="lead">Choisissez vous-même l'espèce, la classe et l'historique : la fiche se calcule selon les règles officielles, prête à donner au MJ.</p>
